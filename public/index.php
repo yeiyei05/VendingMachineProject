@@ -43,11 +43,11 @@ if (!isset($_SESSION['username']) && !in_array($page, ['login', 'register'])) {
 switch ($page) {
     case 'login':
         $authController = new AuthController($db);
-        $authController->login();
+        $authController-> handleLogin();
         break;
     case 'register':
         $authController = new AuthController($db);
-        $authController->register();
+        $authController-> handleRegister();
         break;
     case 'logout':
         $authController = new AuthController($db);
