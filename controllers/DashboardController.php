@@ -1,30 +1,35 @@
 <?php
 namespace controllers;
 
-class DashboardController {
+require_once __DIR__ . '/../controllers/CapteurController.php';
+
+class DashboardController
+{
     private $db;
 
-    public function index($db) {
+    public function __construct($db)
+    {
         $this->db = $db;
+    }
 
-        // Gestion de la session en toute sécurité
-        if (session_status() === PHP_SESSION_NONE) {
-            session_start();
-        }
-
-        // On vérifie les deux clés possibles par précaution
+    public function showDashboard()
+    {
         if (!isset($_SESSION['user_id']) && !isset($_SESSION['username'])) {
             header('Location: index.php?page=login');
             exit();
         }
 
-        // Récupération des capteurs
         $capteurCtrl = new CapteurController($this->db);
-        $temp = $capteurCtrl->getSensorData('Capteur Temperature', 4.2);
-        $gaz = $capteurCtrl->getSensorData('Capteur Gaz', 120);
-        $lux = $capteurCtrl->getSensorData('Capteur Lumiere', 650);
+        $temp  = $capteurCtrl->getSensorData('Capteur Temperature', 4.2);
+        $gaz   = $capteurCtrl->getSensorData('Capteur Gaz', 120);
+        $lux   = $capteurCtrl->getSensorData('Capteur Lumiere', 650);
+        $stock = $capteurCtrl->getSensorData('HC-SR04', 0);
 
-        // 🚀 C'est cette ligne qui inclut ton design home.php !
         include __DIR__ . '/../views/dashboard/home.php';
+    }
+
+    public function showLanding()
+    {
+        include __DIR__ . '/../views/dashboard/landing.php';
     }
 }
