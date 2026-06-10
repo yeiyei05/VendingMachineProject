@@ -17,10 +17,6 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
-
 // On récupère le dossier parent direct de "public"
 $root = dirname(__DIR__) . DIRECTORY_SEPARATOR;
 
@@ -38,9 +34,9 @@ require_once $root . 'controllers' . DIRECTORY_SEPARATOR . 'ActionneurController
 $database = new Database();
 $db = $database->getConnection();
 
-$page = isset($_GET['page']) ? $_GET['page'] : 'dashboard';
+$page = isset($_GET['page']) ? $_GET['page'] : 'home';
 
-if (!isset($_SESSION['username']) && !in_array($page, ['login', 'register'])) {
+if (!isset($_SESSION['username']) && !in_array($page, ['login', 'register', 'home'])) {
     header('Location: index.php?page=login');
     exit();
 }
@@ -61,18 +57,16 @@ switch ($page) {
         $authController->logout();
         break;
     case 'home':
-        // Notre nouvelle page vitrine grand écran !
         include __DIR__ . '/../views/dashboard/landing.php';
         break;
     case 'dashboard':
         $dashboardController = new controllers\DashboardController($db);
-        $dashboardController->index($db);
+        $dashboardController->showDashboard();
         break;
     case 'capteurs':
         echo '<div class="cyber-card"><h2>⚙️ Console de Configuration</h2><p>Liaison du bus système en cours...</p></div>';
         break;
     default:
-        // Par défaut, l'utilisateur atterrit sur la landing page immersive
         header('Location: index.php?page=home');
         exit();
 }
@@ -82,7 +76,7 @@ $content = ob_get_clean();
 if (isset($_GET['ajax']) && $_GET['ajax'] == '1') {
     echo $content;
 } else {
-    if ($page === 'login' || $page === 'register') {
+    if (in_array($page, ['login', 'register'])) {
         echo $content;
     } else {
         include __DIR__ . '/../views/layout/main.php';
