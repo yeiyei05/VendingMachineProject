@@ -63,6 +63,10 @@ switch ($page) {
         $dashboardController = new controllers\DashboardController($db);
         $dashboardController->showDashboard();
         break;
+    case 'dashboard_data':
+        $dashboardController = new controllers\DashboardController($db);
+        $dashboardController->getDashboardData();
+        break;
     case 'capteurs':
         echo '<div class="cyber-card"><h2>⚙️ Console de Configuration</h2><p>Liaison du bus système en cours...</p></div>';
         break;

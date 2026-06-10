@@ -100,6 +100,93 @@
     }
     document.getElementById('modalOverlay').addEventListener('click', closeModals);
 
+    // --- RAFRAICHISSEMENT DASHBOARD ---
+    let dashboardRefreshTimer = null;
+    let dashboardRefreshInProgress = false;
+
+    function setMetricText(elementId, value, unit) {
+        const element = document.getElementById(elementId);
+        if (!element || value === undefined || value === null) return;
+        element.textContent = `${value} ${unit}`;
+    }
+
+    function updateStockDisplay(stock) {
+        const stockCard = document.getElementById('stock-card');
+        const stockValue = document.getElementById('stock-value');
+        if (!stockCard || !stockValue || stock === undefined || stock === null) return;
+
+        const parsedStock = Number.parseInt(stock, 10);
+        const stockIsLow = Number.isFinite(parsedStock) && parsedStock <= 3;
+        const stockColor = stockIsLow ? '#ff4444' : 'var(--neon-green)';
+
+        stockCard.style.borderLeftColor = stockColor;
+        stockValue.style.color = stockColor;
+        stockValue.style.textShadow = stockIsLow
+            ? '0 0 8px rgba(255,68,68,0.4)'
+            : '0 0 8px rgba(57,255,20,0.4)';
+
+        const stockUnit = document.createElement('span');
+        stockUnit.style.fontSize = '1.2rem';
+        stockUnit.textContent = 'aliments';
+        stockValue.replaceChildren(document.createTextNode(`${stock} `), stockUnit);
+
+        const stockMessage = stockCard.querySelector('p:last-child');
+        if (stockMessage) {
+            stockMessage.style.color = stockIsLow ? '#ff4444' : 'var(--text-muted)';
+            stockMessage.textContent = stockIsLow
+                ? '\u26A0\uFE0F Stock bas - remplissage requis'
+                : 'Niveau d\u00E9tect\u00E9 par HC-SR04.';
+        }
+    }
+
+    function updateDashboardDisplay(data) {
+        setMetricText('sensor-temp', data.temp, '\u00B0C');
+        setMetricText('sensor-gaz', data.gaz, 'ppm');
+        setMetricText('sensor-lux', data.lux, 'lx');
+        updateStockDisplay(data.stock);
+    }
+
+    async function refreshDashboardData(container) {
+        if (dashboardRefreshInProgress || !container.isConnected) return;
+
+        dashboardRefreshInProgress = true;
+        try {
+            const separator = container.dataset.refreshUrl.includes('?') ? '&' : '?';
+            const response = await fetch(`${container.dataset.refreshUrl}${separator}_=${Date.now()}`, {
+                cache: 'no-store',
+                headers: { 'Accept': 'application/json' }
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+
+            const data = await response.json();
+            if (container.isConnected) {
+                updateDashboardDisplay(data);
+            }
+        } catch (error) {
+            console.error('Erreur actualisation dashboard:', error);
+        } finally {
+            dashboardRefreshInProgress = false;
+        }
+    }
+
+    function initDashboardAutoRefresh() {
+        if (dashboardRefreshTimer) {
+            clearInterval(dashboardRefreshTimer);
+            dashboardRefreshTimer = null;
+        }
+
+        const dashboardContainer = document.getElementById('dashboard-live-data');
+        if (!dashboardContainer) return;
+
+        refreshDashboardData(dashboardContainer);
+        dashboardRefreshTimer = setInterval(() => {
+            refreshDashboardData(dashboardContainer);
+        }, 1000);
+    }
+
     // --- NAVIGATION SPA DYNAMIQUE ---
     document.querySelectorAll('.menu-link').forEach(link => {
         link.addEventListener('click', function(e) {
@@ -122,11 +209,14 @@
                         history.pushState(null, '', url);
                         viewport.style.opacity = '1';
                         viewport.style.transform = 'translateY(0)';
+                        initDashboardAutoRefresh();
                     })
                     .catch(err => console.error('Erreur SPA:', err));
             }, 200);
         });
     });
+
+    initDashboardAutoRefresh();
 
     window.addEventListener('popstate', () => { window.location.reload(); });
 </script>

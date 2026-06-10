@@ -15,7 +15,7 @@ DB_PASSWORD = ''
 DEVICE_NAME = 'HC-SR04'
 
 # Intervalle entre deux enregistrements en base (secondes)
-SAVE_INTERVAL = 60
+SAVE_INTERVAL = 1
 # ───────────────────────────────────────────────────────────
 
 
