@@ -100,6 +100,95 @@
     }
     document.getElementById('modalOverlay').addEventListener('click', closeModals);
 
+    // --- RAFRAICHISSEMENT DASHBOARD ---
+    let dashboardRefreshTimer = null;
+    let dashboardRefreshInProgress = false;
+
+    function updateStockDisplay(stock) {
+        const stockCard = document.getElementById('stock-card');
+        const stockValue = document.getElementById('stock-value');
+        const stockStatus = document.getElementById('stock-status');
+        const stockFill = document.getElementById('stock-fill');
+        const stockMessage = document.getElementById('stock-message');
+
+        if (!stockCard || !stockValue || stock === undefined || stock === null) return;
+
+        const parsedStock = Number.parseInt(stock, 10);
+        const stockIsLow = Number.isFinite(parsedStock) && parsedStock <= 3;
+        const stockLevel = Number.isFinite(parsedStock)
+            ? Math.max(0, Math.min(100, (parsedStock / 5) * 100))
+            : 0;
+        const stockStatusText = stockIsLow ? '\u00C0 recharger' : 'Op\u00E9rationnel';
+        const stockMessageText = stockIsLow
+            ? 'Stock bas d\u00E9tect\u00E9. Planifier un remplissage du distributeur.'
+            : 'Niveau de stock stable, d\u00E9tect\u00E9 par le capteur HC-SR04.';
+
+        stockCard.classList.toggle('is-low', stockIsLow);
+        stockCard.classList.toggle('is-ready', !stockIsLow);
+        stockValue.textContent = stock;
+
+        if (stockStatus) {
+            stockStatus.textContent = stockStatusText;
+            stockStatus.classList.toggle('is-low', stockIsLow);
+            stockStatus.classList.toggle('is-ready', !stockIsLow);
+        }
+
+        if (stockFill) {
+            stockFill.style.width = `${stockLevel}%`;
+        }
+
+        if (stockMessage) {
+            stockMessage.textContent = stockMessageText;
+        }
+    }
+
+    function updateDashboardDisplay(data) {
+        if (data && Object.prototype.hasOwnProperty.call(data, 'stock')) {
+            updateStockDisplay(data.stock);
+        }
+    }
+
+    async function refreshDashboardData(container) {
+        if (dashboardRefreshInProgress || !container.isConnected) return;
+
+        dashboardRefreshInProgress = true;
+        try {
+            const separator = container.dataset.refreshUrl.includes('?') ? '&' : '?';
+            const response = await fetch(`${container.dataset.refreshUrl}${separator}_=${Date.now()}`, {
+                cache: 'no-store',
+                headers: { 'Accept': 'application/json' }
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+
+            const data = await response.json();
+            if (container.isConnected) {
+                updateDashboardDisplay(data);
+            }
+        } catch (error) {
+            console.error('Erreur actualisation dashboard:', error);
+        } finally {
+            dashboardRefreshInProgress = false;
+        }
+    }
+
+    function initDashboardAutoRefresh() {
+        if (dashboardRefreshTimer) {
+            clearInterval(dashboardRefreshTimer);
+            dashboardRefreshTimer = null;
+        }
+
+        const dashboardContainer = document.getElementById('dashboard-live-data');
+        if (!dashboardContainer) return;
+
+        refreshDashboardData(dashboardContainer);
+        dashboardRefreshTimer = setInterval(() => {
+            refreshDashboardData(dashboardContainer);
+        }, 1000);
+    }
+
     // --- NAVIGATION SPA DYNAMIQUE ---
     document.querySelectorAll('.menu-link').forEach(link => {
         link.addEventListener('click', function(e) {
@@ -122,11 +211,14 @@
                         history.pushState(null, '', url);
                         viewport.style.opacity = '1';
                         viewport.style.transform = 'translateY(0)';
+                        initDashboardAutoRefresh();
                     })
                     .catch(err => console.error('Erreur SPA:', err));
             }, 200);
         });
     });
+
+    initDashboardAutoRefresh();
 
     window.addEventListener('popstate', () => { window.location.reload(); });
 </script>

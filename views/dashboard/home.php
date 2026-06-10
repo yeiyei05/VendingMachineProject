@@ -1,54 +1,50 @@
 <?php
-$temp  = $temp  ?? '4.2';
-$gaz   = $gaz   ?? '120';
-$lux   = $lux   ?? '650';
 $stock = $stock ?? '0';
-$stockBas = (int)$stock <= 3;
+$stockNumber = (int)$stock;
+$stockIsLow = $stockNumber <= 3;
+$stockLevel = max(0, min(100, ($stockNumber / 5) * 100));
+$stockStatus = $stockIsLow ? 'À recharger' : 'Opérationnel';
+$stockMessage = $stockIsLow
+    ? 'Stock bas détecté. Planifier un remplissage du distributeur.'
+    : 'Niveau de stock stable, détecté par le capteur HC-SR04.';
 ?>
 
-<div style="margin-bottom: 30px;">
-    <h1 style="text-shadow: 0 0 10px var(--neon-blue); font-size: 2rem;">VUE D'ENSEMBLE DU RÉSEAU</h1>
-    <p style="color: var(--text-muted);">Données télémétriques de la Vending Machine en temps réel.</p>
-</div>
+<section class="dashboard-stock-shell" id="dashboard-live-data" data-refresh-url="index.php?page=dashboard_data">
+    <div class="dashboard-hero">
+        <div>
+            <span class="dashboard-eyebrow">Pilotage temps réel</span>
+            <h1>Stock Distributeur</h1>
+            <p>Suivi professionnel du niveau disponible dans le distributeur connecté.</p>
+        </div>
 
-<div class="grid-devices">
-
-    <div class="cyber-card" style="border-left-color: <?= $stockBas ? '#ff4444' : 'var(--neon-green)' ?>;">
-        <h3>📦 Stock Distributeur A</h3>
-        <p style="font-size: 2.2rem; font-weight: bold; margin: 15px 0;
-                  color: <?= $stockBas ? '#ff4444' : 'var(--neon-green)' ?>;
-                  text-shadow: 0 0 8px rgba(57,255,20,0.4);">
-            <?= htmlspecialchars($stock) ?> <span style="font-size: 1.2rem;">aliments</span>
-        </p>
-        <?php if ($stockBas): ?>
-            <p style="color: #ff4444; font-size: 0.9rem;">⚠️ Stock bas — remplissage requis</p>
-        <?php else: ?>
-            <p style="color: var(--text-muted); font-size: 0.9rem;">Niveau détecté par HC-SR04.</p>
-        <?php endif; ?>
+        <span class="status-pill <?= $stockIsLow ? 'is-low' : 'is-ready' ?>" id="stock-status">
+            <?= htmlspecialchars($stockStatus) ?>
+        </span>
     </div>
 
-    <div class="cyber-card">
-        <h3>🌡️ Température Ambiante</h3>
-        <p style="font-size: 2.2rem; font-weight: bold; margin: 15px 0; color: var(--neon-blue); text-shadow: 0 0 8px rgba(0,240,255,0.4);">
-            <?= htmlspecialchars($temp) ?> °C
-        </p>
-        <p style="color: var(--text-muted); font-size: 0.9rem;">Suivi de la chaîne de fraîcheur des produits.</p>
-    </div>
+    <article class="stock-panel <?= $stockIsLow ? 'is-low' : 'is-ready' ?>" id="stock-card">
+        <div class="stock-panel__header">
+            <div>
+                <span class="stock-panel__label">Donnée affichée</span>
+                <h2>Stock Distributeur</h2>
+            </div>
+            <div class="stock-panel__icon" aria-hidden="true">SD</div>
+        </div>
 
-    <div class="cyber-card">
-        <h3>💨 Analyse Qualité de l'Air (Gaz)</h3>
-        <p style="font-size: 2.2rem; font-weight: bold; margin: 15px 0; color: var(--neon-purple); text-shadow: 0 0 8px rgba(189,0,255,0.4);">
-            <?= htmlspecialchars($gaz) ?> ppm
-        </p>
-        <p style="color: var(--text-muted); font-size: 0.9rem;">Détection de sécurité et décomposition.</p>
-    </div>
+        <div class="stock-metric">
+            <span class="stock-metric__value" id="stock-value"><?= htmlspecialchars($stock) ?></span>
+            <span class="stock-metric__unit">aliments</span>
+        </div>
 
-    <div class="cyber-card">
-        <h3>💡 Luminosité Interne</h3>
-        <p style="font-size: 2.2rem; font-weight: bold; margin: 15px 0; color: var(--neon-green); text-shadow: 0 0 8px rgba(57,255,20,0.4);">
-            <?= htmlspecialchars($lux) ?> lx
-        </p>
-        <p style="color: var(--text-muted); font-size: 0.9rem;">Contrôle optique des sas de distribution.</p>
-    </div>
+        <div class="stock-progress" aria-hidden="true">
+            <span id="stock-fill" style="width: <?= $stockLevel ?>%;"></span>
+        </div>
 
-</div>
+        <p class="stock-message" id="stock-message"><?= htmlspecialchars($stockMessage) ?></p>
+
+        <div class="stock-meta">
+            <span>Source: HC-SR04</span>
+            <span>Actualisation automatique</span>
+        </div>
+    </article>
+</section>
