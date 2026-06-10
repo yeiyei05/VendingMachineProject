@@ -38,13 +38,13 @@ def parse_ligne(ligne):
     """
     Parse une ligne du type :
       'Distance: 150 mm | Stock: 3 aliments'
-    Retourne (distance_mm, stock) ou None si la ligne ne correspond pas.
+    Retourne (distance, stock) ou None si la ligne ne correspond pas.
     """
     match = re.search(r'Distance:\s*(\d+)\s*mm\s*\|\s*Stock:\s*(\d+)', ligne)
     if match:
-        distance_mm = int(match.group(1))
+        distance = int(match.group(1))
         stock = int(match.group(2))
-        return distance_mm, stock
+        return distance, stock
     return None
 
 
@@ -93,15 +93,15 @@ def main():
             # Ligne de données principale
             result = parse_ligne(ligne)
             if result:
-                distance_mm, stock = result
+                distance, stock = result
 
-                # On stocke la distance brute en mm dans value_recorded
+                # On stocke le stock calculé dans value_recorded
                 cursor.execute(
                     "INSERT INTO device_history (device_id, value_recorded) VALUES (%s, %s)",
                     (device_id, str(stock))
                 )
                 conn.commit()
-                print(f"  → Distance : {distance_mm} mm | Stock : {stock} aliments | Enregistré ✓\n")
+                print(f"  → Distance : {distance} mm | Stock : {stock} aliments | Enregistré ✓\n")
 
     except KeyboardInterrupt:
         print("\n[INFO] Arrêt propre.")
