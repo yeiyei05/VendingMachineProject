@@ -4,7 +4,7 @@ import time
 import re
 
 # ── Configuration ──────────────────────────────────────────
-SERIAL_PORT = 'COM4'        # À adapter (Gestionnaire de périphériques)
+SERIAL_PORT = 'COM3'        # À adapter (Gestionnaire de périphériques)
 BAUD_RATE = 115200          # Correspond à MX_USART2_UART_Init
 
 DB_HOST = 'localhost'
@@ -14,6 +14,7 @@ DB_PASSWORD = ''
 
 DEVICE_NAME = 'HC-SR04'
 INTERVALLE = 0.5            # La STM32 envoie toutes les 500ms (HAL_Delay(500))
+CLEANUP_INTERVAL = 100      # Nombre de mesures avant purge de l'historique du capteur
 # ───────────────────────────────────────────────────────────
 
 
@@ -75,7 +76,6 @@ def main():
         return
 
     print("[INFO] En écoute... (Ctrl+C pour arrêter)\n")
-
     try:
         while True:
             ligne = ser.readline().decode('utf-8', errors='ignore').strip()
@@ -100,8 +100,29 @@ def main():
                     "INSERT INTO device_history (device_id, value_recorded) VALUES (%s, %s)",
                     (device_id, str(stock))
                 )
+
+                cursor.execute(
+                    "SELECT COUNT(*) FROM device_history WHERE device_id = %s",
+                    (device_id,)
+                )
+                nb_mesures = cursor.fetchone()[0]
+                purge_effectuee = False
+
+                if nb_mesures >= CLEANUP_INTERVAL:
+                    cursor.execute(
+                        "DELETE FROM device_history WHERE device_id = %s",
+                        (device_id,)
+                    )
+                    purge_effectuee = True
+                    print(f"[BDD] {cursor.rowcount} mesure(s) supprimée(s) après {CLEANUP_INTERVAL} insertions")
+                else:
+                    print(f"[BDD] {nb_mesures}/{CLEANUP_INTERVAL} mesure(s) avant suppression")
+
                 conn.commit()
-                print(f"  → Distance : {distance} mm | Stock : {stock} aliments | Enregistré ✓\n")
+                if purge_effectuee:
+                    print(f"  → Distance : {distance} mm | Stock : {stock} aliments | Historique purgé ✓\n")
+                else:
+                    print(f"  → Distance : {distance} mm | Stock : {stock} aliments | Enregistré ✓\n")
 
     except KeyboardInterrupt:
         print("\n[INFO] Arrêt propre.")
