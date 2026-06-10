@@ -104,46 +104,48 @@
     let dashboardRefreshTimer = null;
     let dashboardRefreshInProgress = false;
 
-    function setMetricText(elementId, value, unit) {
-        const element = document.getElementById(elementId);
-        if (!element || value === undefined || value === null) return;
-        element.textContent = `${value} ${unit}`;
-    }
-
     function updateStockDisplay(stock) {
         const stockCard = document.getElementById('stock-card');
         const stockValue = document.getElementById('stock-value');
+        const stockStatus = document.getElementById('stock-status');
+        const stockFill = document.getElementById('stock-fill');
+        const stockMessage = document.getElementById('stock-message');
+
         if (!stockCard || !stockValue || stock === undefined || stock === null) return;
 
         const parsedStock = Number.parseInt(stock, 10);
         const stockIsLow = Number.isFinite(parsedStock) && parsedStock <= 3;
-        const stockColor = stockIsLow ? '#ff4444' : 'var(--neon-green)';
+        const stockLevel = Number.isFinite(parsedStock)
+            ? Math.max(0, Math.min(100, (parsedStock / 5) * 100))
+            : 0;
+        const stockStatusText = stockIsLow ? '\u00C0 recharger' : 'Op\u00E9rationnel';
+        const stockMessageText = stockIsLow
+            ? 'Stock bas d\u00E9tect\u00E9. Planifier un remplissage du distributeur.'
+            : 'Niveau de stock stable, d\u00E9tect\u00E9 par le capteur HC-SR04.';
 
-        stockCard.style.borderLeftColor = stockColor;
-        stockValue.style.color = stockColor;
-        stockValue.style.textShadow = stockIsLow
-            ? '0 0 8px rgba(255,68,68,0.4)'
-            : '0 0 8px rgba(57,255,20,0.4)';
+        stockCard.classList.toggle('is-low', stockIsLow);
+        stockCard.classList.toggle('is-ready', !stockIsLow);
+        stockValue.textContent = stock;
 
-        const stockUnit = document.createElement('span');
-        stockUnit.style.fontSize = '1.2rem';
-        stockUnit.textContent = 'aliments';
-        stockValue.replaceChildren(document.createTextNode(`${stock} `), stockUnit);
+        if (stockStatus) {
+            stockStatus.textContent = stockStatusText;
+            stockStatus.classList.toggle('is-low', stockIsLow);
+            stockStatus.classList.toggle('is-ready', !stockIsLow);
+        }
 
-        const stockMessage = stockCard.querySelector('p:last-child');
+        if (stockFill) {
+            stockFill.style.width = `${stockLevel}%`;
+        }
+
         if (stockMessage) {
-            stockMessage.style.color = stockIsLow ? '#ff4444' : 'var(--text-muted)';
-            stockMessage.textContent = stockIsLow
-                ? '\u26A0\uFE0F Stock bas - remplissage requis'
-                : 'Niveau d\u00E9tect\u00E9 par HC-SR04.';
+            stockMessage.textContent = stockMessageText;
         }
     }
 
     function updateDashboardDisplay(data) {
-        setMetricText('sensor-temp', data.temp, '\u00B0C');
-        setMetricText('sensor-gaz', data.gaz, 'ppm');
-        setMetricText('sensor-lux', data.lux, 'lx');
-        updateStockDisplay(data.stock);
+        if (data && Object.prototype.hasOwnProperty.call(data, 'stock')) {
+            updateStockDisplay(data.stock);
+        }
     }
 
     async function refreshDashboardData(container) {

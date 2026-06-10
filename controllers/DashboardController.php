@@ -20,9 +20,6 @@ class DashboardController
         }
 
         $values = $this->getDashboardValues();
-        $temp = $values['temp'];
-        $gaz = $values['gaz'];
-        $lux = $values['lux'];
         $stock = $values['stock'];
 
         include __DIR__ . '/../views/dashboard/home.php';
@@ -47,9 +44,6 @@ class DashboardController
         $capteurCtrl = new CapteurController($this->db);
 
         return [
-            'temp' => $capteurCtrl->getSensorData('Capteur Temperature', 4.2),
-            'gaz' => $capteurCtrl->getSensorData('Capteur Gaz', 120),
-            'lux' => $capteurCtrl->getSensorData('Capteur Lumiere', 650),
             'stock' => $capteurCtrl->getSensorData('HC-SR04', 0),
         ];
     }
