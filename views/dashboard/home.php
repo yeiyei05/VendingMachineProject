@@ -1,25 +1,39 @@
-<div class="cyber-card" style="margin-bottom: 40px; border-left-color: var(--neon-purple);">
-    <h1 style="margin-top: 0; font-size: 2.5rem; text-shadow: 0 0 10px var(--neon-purple);">自動販売機 — LE DISTRIBUTEUR DU FUTUR</h1>
-    <p style="font-size: 1.1rem; line-height: 1.6; color: #cbd5e1;">
-        Inspiré par l'écosystème ultra-connecté du Japon, notre réseau de distributeurs automatiques nouvelle génération propose une gestion intelligente en temps réel. Des boissons glacées aux légumes frais de saison, chaque unité est encadrée par des capteurs de pointe pour garantir une qualité optimale.
-    </p>
-</div>
+<?php
+/** @var string|null $temp */
+/** @var string|null $gaz */
+/** @var string|null $lux */
+$temp = $temp ?? '4.2';
+$gaz = $gaz ?? '120';
+$lux = $lux ?? '650';
+?>
 
-<h2 style="color: var(--neon-blue); text-shadow: 0 0 8px var(--neon-blue); margin-top: 40px;">Spécifications de Notre Machine</h2>
+<div style="margin-bottom: 30px;">
+    <h1 style="text-shadow: 0 0 10px var(--neon-blue); font-size: 2rem;">VUE D'ENSEMBLE DU RÉSEAU</h1>
+    <p style="color: var(--text-muted);">Données télémétriques de la Vending Machine en temps réel.</p>
+</div>
 
 <div class="grid-devices">
     <div class="cyber-card">
-        <h3 style="color: var(--neon-blue);">❄️ Fraîcheur Contrôlée</h3>
-        <p style="color: var(--text-muted);">Suivi thermique et hygrométrique constant pour préserver les nutriments des produits frais et salades.</p>
+        <h3>🌡️ Température Ambiante</h3>
+        <p style="font-size: 2.2rem; font-weight: bold; margin: 15px 0; color: var(--neon-blue); text-shadow: 0 0 8px rgba(0,240,255,0.4);">
+            <?php echo htmlspecialchars($temp); ?> °C
+        </p>
+        <p style="color: var(--text-muted); font-size: 0.9rem;">Suivi de la chaîne de fraîcheur des produits.</p>
     </div>
 
-    <div class="cyber-card" style="border-left-color: var(--neon-green);">
-        <h3 style="color: var(--neon-green);">🍃 Analyse de Gaz</h3>
-        <p style="color: var(--text-muted);">Détection précoce d'anomalies de décomposition ou de mûrissement excessif des aliments stockés.</p>
+    <div class="cyber-card">
+        <h3>💨 Analyse Qualité de l'Air (Gaz)</h3>
+        <p style="font-size: 2.2rem; font-weight: bold; margin: 15px 0; color: var(--neon-purple); text-shadow: 0 0 8px rgba(189,0,255,0.4);">
+            <?php echo htmlspecialchars($gaz); ?> ppm
+        </p>
+        <p style="color: var(--text-muted); font-size: 0.9rem;">Détection de sécurité et décomposition.</p>
     </div>
 
-    <div class="cyber-card" style="border-left-color: var(--neon-purple);">
-        <h3 style="color: var(--neon-purple);">⚡ Distribution Mécanique</h3>
-        <p style="color: var(--text-muted);">Vérification par capteurs optiques et moteurs synchronisés pour garantir la bonne réception du produit.</p>
+    <div class="cyber-card">
+        <h3>💡 Luminosité Interne</h3>
+        <p style="font-size: 2.2rem; font-weight: bold; margin: 15px 0; color: var(--neon-green); text-shadow: 0 0 8px rgba(57,255,20,0.4);">
+            <?php echo htmlspecialchars($lux); ?> lx
+        </p>
+        <p style="color: var(--text-muted); font-size: 0.9rem;">Contrôle optique des sas de distribution.</p>
     </div>
 </div>

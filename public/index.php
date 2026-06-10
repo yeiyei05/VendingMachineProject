@@ -1,8 +1,13 @@
 <?php
 // public/index.php
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
 use config\Database;
 use controllers\AuthController;
 use controllers\DashboardController;
+use controllers\CapteurController;
+use controllers\ActionneurController;
 
 if (function_exists('opcache_reset')) {
     opcache_reset();
@@ -40,24 +45,45 @@ if (!isset($_SESSION['username']) && !in_array($page, ['login', 'register'])) {
     exit();
 }
 
+ob_start();
+
 switch ($page) {
     case 'login':
-        $authController = new AuthController($db);
-        $authController-> handleLogin();
+        $authController = new controllers\AuthController($db);
+        $authController->handleLogin();
         break;
     case 'register':
-        $authController = new AuthController($db);
-        $authController-> handleRegister();
+        $authController = new controllers\AuthController($db);
+        $authController->handleRegister();
         break;
     case 'logout':
-        $authController = new AuthController($db);
+        $authController = new controllers\AuthController($db);
         $authController->logout();
         break;
     case 'dashboard':
-        $dashboardController = new DashboardController($db);
-        $dashboardController->index();
+        $dashboardController = new controllers\DashboardController($db);
+        $dashboardController->index($db);
+        break;
+    case 'capteurs':
+        // C'est ici que tu appelleras ton gestionnaire de capteurs/actionneurs !
+        echo '<div class="cyber-card"><h2>⚙️ Gestion des Capteurs & Actionneurs</h2><p>Interface interactive en cours de liaison.</p></div>';
         break;
     default:
         header('Location: index.php?page=dashboard');
         exit();
+}
+
+$content = ob_get_clean(); // On récupère la vue générée
+
+// --- DETECTION DU MODE ULTRA-SMOOTH SPA ---
+if (isset($_GET['ajax']) && $_GET['ajax'] == '1') {
+    // Si c'colle à une requête Fetch (ClickUp-like), on envoie juste le fragment HTML
+    echo $content;
+} else {
+    // Si c'est un rechargement complet ou l'accès initial
+    if ($page === 'login' || $page === 'register') {
+        echo $content;
+    } else {
+        include __DIR__ . '/../views/layout/main.php';
+    }
 }

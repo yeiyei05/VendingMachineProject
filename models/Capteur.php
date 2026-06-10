@@ -1,6 +1,8 @@
 <?php
 
 namespace models;
+use PDO;
+
 class Capteur
 {
     private $conn;

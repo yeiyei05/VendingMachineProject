@@ -1,6 +1,7 @@
 <?php
 
 namespace models;
+use PDO;
 class User
 {
     private $conn;
@@ -36,7 +37,7 @@ class User
         $stmt->execute();
 
         if ($stmt->rowCount() > 0) {
-            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            $row = $stmt->fetch(\PDO::FETCH_ASSOC);
             if (password_verify($password, $row['password'])) {
                 return $row; // Connexion réussie, on renvoie les infos de l'utilisateur
             }
