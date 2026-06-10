@@ -60,27 +60,28 @@ switch ($page) {
         $authController = new controllers\AuthController($db);
         $authController->logout();
         break;
+    case 'home':
+        // Notre nouvelle page vitrine grand écran !
+        include __DIR__ . '/../views/dashboard/landing.php';
+        break;
     case 'dashboard':
         $dashboardController = new controllers\DashboardController($db);
         $dashboardController->index($db);
         break;
     case 'capteurs':
-        // C'est ici que tu appelleras ton gestionnaire de capteurs/actionneurs !
-        echo '<div class="cyber-card"><h2>⚙️ Gestion des Capteurs & Actionneurs</h2><p>Interface interactive en cours de liaison.</p></div>';
+        echo '<div class="cyber-card"><h2>⚙️ Console de Configuration</h2><p>Liaison du bus système en cours...</p></div>';
         break;
     default:
-        header('Location: index.php?page=dashboard');
+        // Par défaut, l'utilisateur atterrit sur la landing page immersive
+        header('Location: index.php?page=home');
         exit();
 }
 
-$content = ob_get_clean(); // On récupère la vue générée
+$content = ob_get_clean();
 
-// --- DETECTION DU MODE ULTRA-SMOOTH SPA ---
 if (isset($_GET['ajax']) && $_GET['ajax'] == '1') {
-    // Si c'colle à une requête Fetch (ClickUp-like), on envoie juste le fragment HTML
     echo $content;
 } else {
-    // Si c'est un rechargement complet ou l'accès initial
     if ($page === 'login' || $page === 'register') {
         echo $content;
     } else {

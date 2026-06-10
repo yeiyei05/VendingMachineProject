@@ -14,7 +14,8 @@
             VENDING<span>OS</span>
         </div>
         <ul class="sidebar-menu">
-            <li><a href="index.php?page=dashboard" class="menu-link <?php echo $page === 'dashboard' ? 'active' : ''; ?>" data-page="dashboard">📊 Accueil</a></li>
+            <li><a href="index.php?page=home" class="menu-link <?php echo $page === 'home' ? 'active' : ''; ?>" data-page="home">🏠 Accueil</a></li>
+            <li><a href="index.php?page=dashboard" class="menu-link <?php echo $page === 'dashboard' ? 'active' : ''; ?>" data-page="dashboard">📊 Dashboard</a></li>
             <li><a href="index.php?page=capteurs" class="menu-link <?php echo $page === 'capteurs' ? 'active' : ''; ?>" data-page="capteurs">🌡️ Capteurs & Actions</a></li>
             <li><a href="index.php?page=logout" class="logout-btn">🚪 Déconnexion</a></li>
         </ul>
@@ -23,7 +24,8 @@
     <div class="main-content">
         <header class="top-header">
             <div style="font-weight: 500; font-size: 1.1rem;">
-                Système / <span id="current-page-title" style="color: var(--neon-blue); text-transform: uppercase; font-weight: bold;"><?php echo $page; ?></span>
+                <span class="system-breadcrumb" id="systemBreadcrumb">Accueil</span> /
+                <span id="current-page-title" style="color: var(--neon-blue); text-transform: uppercase; font-weight: bold;"><?php echo $page; ?></span>
             </div>
 
             <button class="theme-switch" id="themeToggle">
@@ -34,79 +36,99 @@
         <main id="app-viewport">
             <?php echo $content; ?>
         </main>
-        </main>
     </div>
+</div>
 
-    <script>
-        // --- GESTION DU THEME CLAIR / SOMBRE ---
-        const themeToggle = document.getElementById('themeToggle');
-        const htmlEl = document.documentElement;
-        const themeIcon = document.getElementById('themeIcon');
-        const themeText = document.getElementById('themeText');
+<div class="modal-overlay" id="modalOverlay"></div>
 
-        const savedTheme = localStorage.getItem('theme') || 'dark';
-        htmlEl.setAttribute('data-theme', savedTheme);
-        updateToggleUI(savedTheme);
+<div class="cyber-modal" id="modalCgu">
+    <h2 style="color: var(--neon-blue); margin-bottom: 15px;">Conditions Générales d'Utilisation</h2>
+    <p style="line-height: 1.6; margin-bottom: 20px;">Ce système automatisé Vending OS est réservé aux opérateurs et ingénieurs de maintenance habilités. Les données de télémétrie collectées sont soumises aux protocoles de sécurité de l'entreprise...</p>
+    <button class="btn-cyber" onclick="closeModals()">Fermer</button>
+</div>
 
-        themeToggle.addEventListener('click', () => {
-            const currentTheme = htmlEl.getAttribute('data-theme');
-            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-            htmlEl.setAttribute('data-theme', newTheme);
-            localStorage.setItem('theme', newTheme);
-            updateToggleUI(newTheme);
-        });
+<div class="cyber-modal" id="modalMentions">
+    <h2 style="color: var(--neon-purple); margin-bottom: 15px;">Mentions Légales</h2>
+    <p style="line-height: 1.6; margin-bottom: 20px;">Éditeur du logiciel : Cyber-Retail Automation Systems Corp.<br>Hébergement : Serveur Local Décentralisé XAMPP v2026.<br>Conformité : Directive IoT et Sécurité Réseau.</p>
+    <button class="btn-cyber" onclick="closeModals()">Fermer</button>
+</div>
 
-        function updateToggleUI(theme) {
-            if (theme === 'dark') {
-                themeIcon.innerText = '🌙';
-                themeText.innerText = 'Mode Sombre';
-            } else {
-                themeIcon.innerText = '☀️';
-                themeText.innerText = 'Mode Clair';
-            }
+<script>
+    // --- THÈME ---
+    const themeToggle = document.getElementById('themeToggle');
+    const htmlEl = document.documentElement;
+    const themeIcon = document.getElementById('themeIcon');
+    const themeText = document.getElementById('themeText');
+
+    const savedTheme = localStorage.getItem('theme') || 'dark';
+    htmlEl.setAttribute('data-theme', savedTheme);
+    updateToggleUI(savedTheme);
+
+    themeToggle.addEventListener('click', () => {
+        const currentTheme = htmlEl.getAttribute('data-theme');
+        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+        htmlEl.setAttribute('data-theme', newTheme);
+        localStorage.setItem('theme', newTheme);
+        updateToggleUI(newTheme);
+    });
+
+    function updateToggleUI(theme) {
+        if (theme === 'dark') {
+            themeIcon.innerText = '🌙'; themeText.innerText = 'Mode Sombre';
+        } else {
+            themeIcon.innerText = '☀️'; themeText.innerText = 'Mode Clair';
         }
+    }
 
-        // --- NAVIGATION DYNAMIQUE SANS RECHARGEMENT (AJAX / FETCH) ---
-        document.querySelectorAll('.menu-link').forEach(link => {
-            link.addEventListener('click', function(e) {
-                e.preventDefault(); // Bloque le rechargement brutal
+    // --- CLIC SUR ACCUEIL (BREADCRUMB) -> RENVOIE VERS LA LANDING PAGE ---
+    document.getElementById('systemBreadcrumb').addEventListener('click', () => {
+        const homeLink = document.querySelector('[data-page="home"]');
+        if (homeLink) homeLink.click();
+    });
 
-                const targetPage = this.getAttribute('data-page');
-                const url = this.getAttribute('href');
+    // --- INTERACTION MODALES SANS RECHARGEMENT ---
+    function openModal(id) {
+        document.getElementById('modalOverlay').classList.add('active');
+        document.getElementById(id).classList.add('active');
+    }
 
-                // Petite animation de sortie sur le viewport
-                const viewport = document.getElementById('app-viewport');
-                viewport.style.opacity = '0';
-                viewport.style.transform = 'translateY(-10px)';
-
-                setTimeout(() => {
-                    // Fetch va chercher le contenu de la page en tâche de fond
-                    fetch(url + '&ajax=1')
-                        .then(response => response.text())
-                        .then(html => {
-                            viewport.innerHTML = html;
-                            document.getElementById('current-page-title').innerText = targetPage;
-
-                            // Met à jour la classe active sur le menu
-                            document.querySelectorAll('.menu-link').forEach(l => l.classList.remove('active'));
-                            this.classList.add('active');
-
-                            // Remet l'historique de navigation à jour dans le navigateur
-                            history.pushState(null, '', url);
-
-                            // Animation d'entrée super smooth
-                            viewport.style.opacity = '1';
-                            viewport.style.transform = 'translateY(0)';
-                        })
-                        .catch(err => console.error('Erreur de chargement SPA:', err));
-                }, 200);
-            });
+    function closeModals() {
+        document.getElementById('modalOverlay').classList.remove('active');
+        document.querySelectorAll('.cyber-modal').forEach(modal => {
+            modal.classList.remove('active');
         });
+    }
+    document.getElementById('modalOverlay').addEventListener('click', closeModals);
 
-        // Gérer le bouton "Précédent" du navigateur
-        window.addEventListener('popstate', () => {
-            window.location.reload();
+    // --- NAVIGATION SPA DYNAMIQUE ---
+    document.querySelectorAll('.menu-link').forEach(link => {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            const targetPage = this.getAttribute('data-page');
+            const url = this.getAttribute('href');
+            const viewport = document.getElementById('app-viewport');
+
+            viewport.style.opacity = '0';
+            viewport.style.transform = 'translateY(-10px)';
+
+            setTimeout(() => {
+                fetch(url + '&ajax=1')
+                    .then(response => response.text())
+                    .then(html => {
+                        viewport.innerHTML = html;
+                        document.getElementById('current-page-title').innerText = targetPage;
+                        document.querySelectorAll('.menu-link').forEach(l => l.classList.remove('active'));
+                        this.classList.add('active');
+                        history.pushState(null, '', url);
+                        viewport.style.opacity = '1';
+                        viewport.style.transform = 'translateY(0)';
+                    })
+                    .catch(err => console.error('Erreur SPA:', err));
+            }, 200);
         });
-    </script>
+    });
+
+    window.addEventListener('popstate', () => { window.location.reload(); });
+</script>
 </body>
 </html>
