@@ -42,9 +42,8 @@ class DashboardController
     private function getDashboardValues()
     {
         $capteurCtrl = new CapteurController($this->db);
-
         return [
-            'stock' => $capteurCtrl->getSensorData('HC-SR04', 0),
+            'stock' => $capteurCtrl->getStock(),
         ];
     }
 

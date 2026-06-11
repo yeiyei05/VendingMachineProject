@@ -1,5 +1,4 @@
 <?php
-
 namespace controllers;
 use models\Capteur;
 
@@ -9,14 +8,22 @@ class CapteurController
 {
     private $capteurModel;
 
+    private $distanceVide = 300;
+    private $epaisseurProduit = 50;
+
     public function __construct($db)
     {
         $this->capteurModel = new Capteur($db);
     }
 
-    public function getSensorData($name, $fallbackValue)
+    public function getStock()
     {
-        $data = $this->capteurModel->getLatestValue($name);
-        return $data ? $data['value_recorded'] : $fallbackValue;
+        $data = $this->capteurModel->getLatestDistance();
+        if ($data) {
+            $distance = (int)$data['distance'];
+            $stock = max(0, intval(($this->distanceVide - $distance) / $this->epaisseurProduit));
+            return $stock;
+        }
+        return 0;
     }
 }
