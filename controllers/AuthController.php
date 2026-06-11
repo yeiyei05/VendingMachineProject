@@ -1,5 +1,4 @@
 <?php
-
 namespace controllers;
 use models\User;
 
@@ -40,7 +39,7 @@ class AuthController
         $success = null;
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $username = $_POST['username'] ?? '';
-            $email = $_POST['email'] ?? '';
+            $email    = $_POST['email'] ?? '';
             $password = $_POST['password'] ?? '';
 
             if ($this->userModel->register($username, $email, $password)) {

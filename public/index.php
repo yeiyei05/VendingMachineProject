@@ -17,10 +17,8 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-// On récupère le dossier parent direct de "public"
 $root = dirname(__DIR__) . DIRECTORY_SEPARATOR;
 
-// On charge les fichiers
 require_once $root . 'config' . DIRECTORY_SEPARATOR . 'database.php';
 require_once $root . 'models' . DIRECTORY_SEPARATOR . 'User.php';
 require_once $root . 'models' . DIRECTORY_SEPARATOR . 'Capteur.php';
@@ -32,7 +30,8 @@ require_once $root . 'controllers' . DIRECTORY_SEPARATOR . 'CapteurController.ph
 require_once $root . 'controllers' . DIRECTORY_SEPARATOR . 'ActionneurController.php';
 
 $database = new Database();
-$db = $database->getConnection();
+$db       = $database->getConnection();       // localhost — utilisateurs
+$db_isep  = $database->getISEPConnection();   // ISEP — capteurs
 
 $page = isset($_GET['page']) ? $_GET['page'] : 'home';
 
@@ -60,11 +59,11 @@ switch ($page) {
         include __DIR__ . '/../views/dashboard/landing.php';
         break;
     case 'dashboard':
-        $dashboardController = new controllers\DashboardController($db);
+        $dashboardController = new controllers\DashboardController($db_isep);
         $dashboardController->showDashboard();
         break;
     case 'dashboard_data':
-        $dashboardController = new controllers\DashboardController($db);
+        $dashboardController = new controllers\DashboardController($db_isep);
         $dashboardController->getDashboardData();
         break;
     case 'capteurs':
