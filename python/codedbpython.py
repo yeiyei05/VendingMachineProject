@@ -152,13 +152,31 @@ def lancer_ecoute():
         print("[INFO] Connexions fermées.")
 
 
+def configuration():
+    global SAVE_INTERVAL
+    print(f"\n[CONFIG] SAVE_INTERVAL actuel : {SAVE_INTERVAL}s")
+    nouvelle_valeur = input("Nouvel intervalle (en secondes, vide pour annuler) : ")
+    if nouvelle_valeur.strip() == '':
+        print("[INFO] Annulé.")
+        return
+    try:
+        valeur = float(nouvelle_valeur)
+        if valeur < 0:
+            raise ValueError
+        SAVE_INTERVAL = valeur
+        print(f"[CONFIG] SAVE_INTERVAL mis à jour : {SAVE_INTERVAL}s")
+    except ValueError:
+        print("[ERREUR] Valeur invalide.")
+
+
 def menu():
     while True:
         print("\n=== MENU ===")
         print("1. Clear les anciennes données")
         print("2. Lancer l'écoute")
         print("3. Afficher les 25 dernières données")
-        print("4. Quitter")
+        print("4. Configuration")
+        print("5. Quitter")
         choix = input("Choix : ")
 
         if choix == '1':
@@ -168,6 +186,8 @@ def menu():
         elif choix == '3':
             afficher_dernieres(25)
         elif choix == '4':
+            configuration()
+        elif choix == '5':
             break
         else:
             print("[ERREUR] Choix invalide.")
