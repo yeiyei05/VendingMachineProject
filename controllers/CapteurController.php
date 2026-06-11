@@ -21,8 +21,7 @@ class CapteurController
         $data = $this->capteurModel->getLatestDistance();
         if ($data) {
             $distance = (int)$data['distance'];
-            $stock = max(0, intval(($this->distanceVide - $distance) / $this->epaisseurProduit));
-            return $stock;
+            return $distance;
         }
         return 0;
     }

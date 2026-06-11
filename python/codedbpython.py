@@ -35,6 +35,7 @@ def parse_ligne(ligne):
         distance = int(match.group(1))
         stock = int(match.group(2))
         return distance, stock
+        print(distance,stock)
     return None
 
 
@@ -91,7 +92,7 @@ def main():
                 if current_time - last_save_time >= SAVE_INTERVAL:
                     cursor.execute(
                         "INSERT INTO distance (distance) VALUES (%s)",
-                        (distance,)
+                        (stock,)
                     )
                     conn.commit()
                     last_save_time = current_time

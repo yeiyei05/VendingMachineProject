@@ -13,8 +13,8 @@ class Capteur
 
     public function getLatestDistance()
     {
-        $query = "SELECT distance, timestamp 
-                  FROM distance 
+        $query = "SELECT distance, timestamp
+                  FROM distance
                   ORDER BY timestamp DESC LIMIT 1";
 
         $stmt = $this->conn->prepare($query);
