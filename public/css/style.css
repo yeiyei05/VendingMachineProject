@@ -624,3 +624,8 @@ footer {
         gap: 8px;
     }
 }
+
+/* Valeurs réduites pour les cartes secondaires */
+.stock-metric__value--sm {
+    font-size: 2rem;
+}
