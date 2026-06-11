@@ -17,13 +17,16 @@ DB_NAME = 'app'
 DB_USER = 'g3b'
 DB_PASSWORD = 'am$S&y39i$5k%^BV'
 
-DISTANCE_VIDE_MM = 300
-EPAISSEUR_PRODUIT_MM = 50
 SAVE_INTERVAL = 1
 # ───────────────────────────────────────────────────────────
 
 
 def parse_ligne(ligne):
+    """
+    Parse une ligne du type :
+    'Distance: 150 mm | Stock: 3 aliments'
+    Retourne (distance, stock) ou None si format invalide.
+    """
     match = re.search(
         r'Distance:\s*(\d+)\s*mm\s*\|\s*Stock:\s*(\d+)',
         ligne
@@ -33,11 +36,6 @@ def parse_ligne(ligne):
         stock = int(match.group(2))
         return distance, stock
     return None
-
-
-def calculer_stock(distance):
-    stock = int((DISTANCE_VIDE_MM - distance) / EPAISSEUR_PRODUIT_MM)
-    return max(0, stock)
 
 
 def main():
@@ -87,8 +85,7 @@ def main():
             result = parse_ligne(ligne)
 
             if result:
-                distance, _ = result
-                stock = calculer_stock(distance)
+                distance, stock = result
                 current_time = time.time()
 
                 if current_time - last_save_time >= SAVE_INTERVAL:
@@ -101,7 +98,7 @@ def main():
                     print(
                         f"[BDD] Enregistré ✓ "
                         f"| Distance : {distance} mm "
-                        f"| Stock calculé : {stock} aliments"
+                        f"| Stock STM32 : {stock} aliments"
                     )
                 else:
                     secondes_restantes = int(
