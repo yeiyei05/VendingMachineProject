@@ -38,9 +38,12 @@ class Database
             $conn = new \PDO(
                 "mysql:host=" . $this->host_isep . ";port=" . $this->port_isep . ";dbname=" . $this->db_isep . ";charset=utf8",
                 $this->user_isep,
-                $this->pass_isep
+                $this->pass_isep,
+                [
+                    \PDO::ATTR_PERSISTENT => true,
+                    \PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION
+                ]
             );
-            $conn->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
             return $conn;
         } catch (\PDOException $e) {
             echo "Erreur connexion ISEP : " . $e->getMessage();
