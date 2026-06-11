@@ -1,5 +1,4 @@
 <?php
-// public/index.php
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
@@ -30,12 +29,12 @@ require_once $root . 'controllers' . DIRECTORY_SEPARATOR . 'CapteurController.ph
 require_once $root . 'controllers' . DIRECTORY_SEPARATOR . 'ActionneurController.php';
 
 $database = new Database();
-$db       = $database->getConnection();       // localhost — utilisateurs
-$db_isep  = $database->getISEPConnection();   // ISEP — capteurs
+$db       = $database->getConnection();
+$db_isep  = $database->getISEPConnection();
 
-$page = isset($_GET['page']) ? $_GET['page'] : 'home';
+$page = isset($_GET['page']) ? $_GET['page'] : 'dashboard';
 
-if (!isset($_SESSION['username']) && !in_array($page, ['login', 'register', 'home'])) {
+if (!isset($_SESSION['username']) && !in_array($page, ['login', 'register'])) {
     header('Location: index.php?page=login');
     exit();
 }
@@ -55,9 +54,6 @@ switch ($page) {
         $authController = new controllers\AuthController($db);
         $authController->logout();
         break;
-    case 'home':
-        include __DIR__ . '/../views/dashboard/landing.php';
-        break;
     case 'dashboard':
         $dashboardController = new controllers\DashboardController($db_isep);
         $dashboardController->showDashboard();
@@ -66,11 +62,8 @@ switch ($page) {
         $dashboardController = new controllers\DashboardController($db_isep);
         $dashboardController->getDashboardData();
         break;
-    case 'capteurs':
-        echo '<div class="cyber-card"><h2>⚙️ Console de Configuration</h2><p>Liaison du bus système en cours...</p></div>';
-        break;
     default:
-        header('Location: index.php?page=home');
+        header('Location: index.php?page=dashboard');
         exit();
 }
 

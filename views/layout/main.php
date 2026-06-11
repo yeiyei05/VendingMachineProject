@@ -14,9 +14,7 @@
             VENDING<span>OS</span>
         </div>
         <ul class="sidebar-menu">
-            <li><a href="index.php?page=home" class="menu-link <?php echo $page === 'home' ? 'active' : ''; ?>" data-page="home">🏠 Accueil</a></li>
             <li><a href="index.php?page=dashboard" class="menu-link <?php echo $page === 'dashboard' ? 'active' : ''; ?>" data-page="dashboard">📊 Dashboard</a></li>
-            <li><a href="index.php?page=capteurs" class="menu-link <?php echo $page === 'capteurs' ? 'active' : ''; ?>" data-page="capteurs">🌡️ Capteurs & Actions</a></li>
             <li><a href="index.php?page=logout" class="logout-btn">🚪 Déconnexion</a></li>
         </ul>
     </aside>
@@ -24,10 +22,8 @@
     <div class="main-content">
         <header class="top-header">
             <div style="font-weight: 500; font-size: 1.1rem;">
-                <span class="system-breadcrumb" id="systemBreadcrumb">Accueil</span> /
-                <span id="current-page-title" style="color: var(--neon-blue); text-transform: uppercase; font-weight: bold;"><?php echo $page; ?></span>
+                <span style="color: var(--neon-blue); text-transform: uppercase; font-weight: bold;"><?php echo strtoupper($page); ?></span>
             </div>
-
             <button class="theme-switch" id="themeToggle">
                 <span id="themeIcon">🌙</span> <span id="themeText">Mode Sombre</span>
             </button>
@@ -80,13 +76,7 @@
         }
     }
 
-    // --- CLIC SUR ACCUEIL (BREADCRUMB) -> RENVOIE VERS LA LANDING PAGE ---
-    document.getElementById('systemBreadcrumb').addEventListener('click', () => {
-        const homeLink = document.querySelector('[data-page="home"]');
-        if (homeLink) homeLink.click();
-    });
-
-    // --- INTERACTION MODALES SANS RECHARGEMENT ---
+    // --- INTERACTION MODALES ---
     function openModal(id) {
         document.getElementById('modalOverlay').classList.add('active');
         document.getElementById(id).classList.add('active');
@@ -118,10 +108,10 @@
         const stockLevel = Number.isFinite(parsedStock)
             ? Math.max(0, Math.min(100, (parsedStock / 5) * 100))
             : 0;
-        const stockStatusText = stockIsLow ? '\u00C0 recharger' : 'Op\u00E9rationnel';
+        const stockStatusText = stockIsLow ? 'À recharger' : 'Opérationnel';
         const stockMessageText = stockIsLow
-            ? 'Stock bas d\u00E9tect\u00E9. Planifier un remplissage du distributeur.'
-            : 'Niveau de stock stable, d\u00E9tect\u00E9 par le capteur HC-SR04.';
+            ? 'Stock bas détecté. Planifier un remplissage du distributeur.'
+            : 'Niveau de stock stable, détecté par le capteur HC-SR04.';
 
         stockCard.classList.toggle('is-low', stockIsLow);
         stockCard.classList.toggle('is-ready', !stockIsLow);
@@ -133,13 +123,8 @@
             stockStatus.classList.toggle('is-ready', !stockIsLow);
         }
 
-        if (stockFill) {
-            stockFill.style.width = `${stockLevel}%`;
-        }
-
-        if (stockMessage) {
-            stockMessage.textContent = stockMessageText;
-        }
+        if (stockFill) stockFill.style.width = `${stockLevel}%`;
+        if (stockMessage) stockMessage.textContent = stockMessageText;
     }
 
     function updateDashboardDisplay(data) {
@@ -159,14 +144,10 @@
                 headers: { 'Accept': 'application/json' }
             });
 
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status}`);
-            }
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
             const data = await response.json();
-            if (container.isConnected) {
-                updateDashboardDisplay(data);
-            }
+            if (container.isConnected) updateDashboardDisplay(data);
         } catch (error) {
             console.error('Erreur actualisation dashboard:', error);
         } finally {
@@ -186,10 +167,10 @@
         refreshDashboardData(dashboardContainer);
         dashboardRefreshTimer = setInterval(() => {
             refreshDashboardData(dashboardContainer);
-        }, 1000);
+        }, 5000);
     }
 
-    // --- NAVIGATION SPA DYNAMIQUE ---
+    // --- NAVIGATION SPA ---
     document.querySelectorAll('.menu-link').forEach(link => {
         link.addEventListener('click', function(e) {
             e.preventDefault();
@@ -205,7 +186,7 @@
                     .then(response => response.text())
                     .then(html => {
                         viewport.innerHTML = html;
-                        document.getElementById('current-page-title').innerText = targetPage;
+                        document.getElementById('current-page-title') && (document.getElementById('current-page-title').innerText = targetPage);
                         document.querySelectorAll('.menu-link').forEach(l => l.classList.remove('active'));
                         this.classList.add('active');
                         history.pushState(null, '', url);
@@ -219,7 +200,6 @@
     });
 
     initDashboardAutoRefresh();
-
     window.addEventListener('popstate', () => { window.location.reload(); });
 </script>
 </body>
