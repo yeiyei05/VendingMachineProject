@@ -158,14 +158,24 @@ switch ($page) {
         <div class="cyber-card">
             <h3 style="color: var(--neon-purple); margin-bottom: 15px;">⚙️ Liaison des Matériels IoT</h3>
             <p style="color: var(--text-color); line-height: 1.6;">Le bus système est actuellement en attente d\'instructions de synchronisation avec l\'automate physique.</p>
-        </div>';
+        </div>
+
+        <footer class="landing-corporate-footer" style="margin-top: 320px; padding-bottom: 40px;">
+            <div class="landing-footer-links">
+                <span class="footer-link" onclick="openModal(\'modalCgu\')">Conditions d\'Utilisation</span>
+                <span class="footer-link-separator">•</span>
+                <span class="footer-link" onclick="openModal(\'modalMentions\')">Mentions Légales</span>
+            </div>
+            <div class="landing-copyright">
+                Copyright © 2026 VendoBot™. Tous droits réservés.
+            </div>
+        </footer>';
         break;
 
     default:
         header('Location: index.php?page=home');
         exit();
 }
-
 $content = ob_get_clean();
 
 // --- RENDU DYNAMIQUE (SPA) ---

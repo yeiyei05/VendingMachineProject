@@ -12,7 +12,9 @@
             </p>
 
             <div style="margin-top: 40px;">
-                <button id="exploreBtn" class="btn-cyber" style="padding: 18px 50px; font-size: 1.1rem; border-radius: 30px;">
+                <button class="btn-cyber"
+                        style="padding: 18px 50px; font-size: 1.1rem; border-radius: 30px;"
+                        onclick="const link = document.querySelector('[data-page=\'dashboard\']'); link ? link.click() : window.location.href='index.php?page=dashboard';">
                     Initialiser la console
                 </button>
             </div>

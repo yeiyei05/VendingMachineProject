@@ -35,3 +35,14 @@ $lux = $lux ?? '650';
         <p style="color: var(--text-muted); font-size: 0.9rem;">Contrôle optique des modules de vente.</p>
     </div>
 </div>
+
+<footer class="landing-corporate-footer" style="margin-top: 300px; padding-bottom: 40px;">
+    <div class="landing-footer-links">
+        <span class="footer-link" onclick="openModal('modalCgu')">Conditions d'Utilisation</span>
+        <span class="footer-link-separator">•</span>
+        <span class="footer-link" onclick="openModal('modalMentions')">Mentions Légales</span>
+    </div>
+    <div class="landing-copyright">
+        Copyright © 2026 VendoBot™. Tous droits réservés.
+    </div>
+</footer>
