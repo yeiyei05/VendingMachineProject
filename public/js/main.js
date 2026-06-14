@@ -17,6 +17,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 // Stock
                 const stockValue = document.getElementById('stock-value');
+
                 const stockFill  = document.getElementById('stock-fill');
                 const stockMsg   = document.getElementById('stock-message');
                 const stockStatus = document.getElementById('stock-status');

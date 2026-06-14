@@ -1,5 +1,6 @@
 <?php
 $stock      = $stock      ?? 0;
+$distance   = $distance   ?? 0;
 $temp       = $temp       ?? '--';
 $humidite   = $humidite   ?? '--';
 $luminosite = $luminosite ?? '--';
@@ -42,15 +43,15 @@ $stockMessage = $stockIsLow
             </div>
             <div class="stock-metric">
                 <span class="stock-metric__value" id="stock-value"><?= htmlspecialchars($stock) ?></span>
-                <span class="stock-metric__unit">aliments</span>
+                <span class="stock-metric__unit">aliments restants</span>
             </div>
             <div class="stock-progress">
                 <span id="stock-fill" style="width: <?= $stockLevel ?>%;"></span>
             </div>
             <p class="stock-message" id="stock-message"><?= htmlspecialchars($stockMessage) ?></p>
             <div class="stock-meta">
+                <span>Distance mesurée : <span id="distance-value"><?= htmlspecialchars($distance) ?></span> mm</span>
                 <span>Source: HC-SR04</span>
-                <span>Actualisation automatique</span>
             </div>
         </article>
 

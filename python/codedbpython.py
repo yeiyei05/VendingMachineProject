@@ -117,8 +117,8 @@ def lancer_ecoute():
 
                 if current_time - last_save_time >= SAVE_INTERVAL:
                     cursor.execute(
-                        "INSERT INTO distance (distance) VALUES (%s)",
-                        (stock,)
+                        "INSERT INTO distance (distance, stock) VALUES (%s, %s)",
+                        (distance, stock)
                     )
                     conn.commit()
                     last_save_time = current_time

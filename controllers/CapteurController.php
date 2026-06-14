@@ -15,6 +15,11 @@ class CapteurController
 
     public function getStock()
     {
+        $data = $this->capteurModel->getLatestStock();
+        return $data ? (int)$data['stock'] : 0;
+    }
+    public function getDistance()
+    {
         $data = $this->capteurModel->getLatestDistance();
         return $data ? (int)$data['distance'] : 0;
     }

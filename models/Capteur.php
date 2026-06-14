@@ -19,6 +19,14 @@ class Capteur
         $stmt->execute();
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
+    public function getLatestStock()
+    {
+        $stmt = $this->conn->prepare(
+            "SELECT stock, timestamp FROM distance ORDER BY timestamp DESC LIMIT 1"
+        );
+        $stmt->execute();
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
 
     public function getLatestTemperatureHumidite()
     {

@@ -21,6 +21,7 @@ class DashboardController
 
         $values = $this->getDashboardValues();
         $stock       = $values['stock'];
+        $distance    = $values['distance'];
         $temp        = $values['temperature'];
         $humidite    = $values['humidite'];
         $luminosite  = $values['luminosite'];
@@ -53,6 +54,7 @@ class DashboardController
 
         return [
             'stock'       => $capteurCtrl->getStock(),
+            'distance'    => $capteurCtrl->getDistance(),
             'temperature' => $th['temperature'],
             'humidite'    => $th['humidite'],
             'luminosite'  => $capteurCtrl->getLuminosite(),

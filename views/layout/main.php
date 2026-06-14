@@ -103,44 +103,104 @@
     let dashboardRefreshTimer = null;
     let dashboardRefreshInProgress = false;
 
-    function updateStockDisplay(stock) {
-        const stockCard = document.getElementById('stock-card');
-        const stockValue = document.getElementById('stock-value');
-        const stockStatus = document.getElementById('stock-status');
-        const stockFill = document.getElementById('stock-fill');
-        const stockMessage = document.getElementById('stock-message');
+function updateStockDisplay(stock) {
+    const stockCard = document.getElementById('stock-card');
+    const stockValue = document.getElementById('stock-value');
+    const stockStatus = document.getElementById('stock-status');
+    const stockFill = document.getElementById('stock-fill');
+    const stockMessage = document.getElementById('stock-message');
 
-        if (!stockCard || !stockValue || stock === undefined || stock === null) return;
+    if (!stockCard || !stockValue || stock === undefined || stock === null) return;
 
-        const parsedStock = Number.parseInt(stock, 10);
-        const stockIsLow = Number.isFinite(parsedStock) && parsedStock <= 3;
-        const stockLevel = Number.isFinite(parsedStock)
-            ? Math.max(0, Math.min(100, (parsedStock / 5) * 100))
-            : 0;
-        const stockStatusText = stockIsLow ? 'À recharger' : 'Opérationnel';
-        const stockMessageText = stockIsLow
-            ? 'Stock bas détecté. Planifier un remplissage du distributeur.'
-            : 'Niveau de stock stable, détecté par le capteur HC-SR04.';
+    const parsedStock = Number.parseInt(stock, 10);
+    const stockIsLow = Number.isFinite(parsedStock) && parsedStock <= 3;
+    const stockLevel = Number.isFinite(parsedStock)
+        ? Math.max(0, Math.min(100, (parsedStock / 5) * 100))
+        : 0;
+    const stockStatusText = stockIsLow ? 'À recharger' : 'Opérationnel';
+    const stockMessageText = stockIsLow
+        ? 'Stock bas détecté. Planifier un remplissage du distributeur.'
+        : 'Niveau de stock stable, détecté par le capteur HC-SR04.';
 
-        stockCard.classList.toggle('is-low', stockIsLow);
-        stockCard.classList.toggle('is-ready', !stockIsLow);
-        stockValue.textContent = stock;
+    stockCard.classList.toggle('is-low', stockIsLow);
+    stockCard.classList.toggle('is-ready', !stockIsLow);
+    stockValue.textContent = stock;
 
-        if (stockStatus) {
-            stockStatus.textContent = stockStatusText;
-            stockStatus.classList.toggle('is-low', stockIsLow);
-            stockStatus.classList.toggle('is-ready', !stockIsLow);
-        }
-
-        if (stockFill) stockFill.style.width = `${stockLevel}%`;
-        if (stockMessage) stockMessage.textContent = stockMessageText;
+    if (stockStatus) {
+        stockStatus.textContent = stockStatusText;
+        stockStatus.classList.toggle('is-low', stockIsLow);
+        stockStatus.classList.toggle('is-ready', !stockIsLow);
     }
 
-    function updateDashboardDisplay(data) {
-        if (data && Object.prototype.hasOwnProperty.call(data, 'stock')) {
-            updateStockDisplay(data.stock);
-        }
+    if (stockFill) stockFill.style.width = `${stockLevel}%`;
+    if (stockMessage) stockMessage.textContent = stockMessageText;
+}
+
+function updateDistanceDisplay(distance) {
+    const el = document.getElementById('distance-value');
+    if (el && distance !== undefined && distance !== null) el.textContent = distance;
+}
+
+function updateAmbianceDisplay(temp, humidite) {
+    const tempValue = document.getElementById('temp-value');
+    const humiditeValue = document.getElementById('humidite-value');
+
+    if (tempValue && temp !== undefined && temp !== null) tempValue.textContent = temp;
+    if (humiditeValue && humidite !== undefined && humidite !== null) humiditeValue.textContent = humidite;
+}
+
+function updateLuminositeDisplay(luminosite) {
+    const el = document.getElementById('luminosite-value');
+    if (el && luminosite !== undefined && luminosite !== null) el.textContent = luminosite;
+}
+
+function updateAirDisplay(co2, tvoc) {
+    const co2El = document.getElementById('co2-value');
+    const tvocEl = document.getElementById('tvoc-value');
+
+    if (co2El && co2 !== undefined && co2 !== null) co2El.textContent = co2;
+    if (tvocEl && tvoc !== undefined && tvoc !== null) tvocEl.textContent = tvoc;
+}
+
+function updateLedDisplay(led) {
+    const ledCard = document.getElementById('led-card');
+    const ledValue = document.getElementById('led-value');
+    const ledMessage = document.getElementById('led-message');
+
+    if (!ledCard) return;
+
+    const isOn = !!led;
+    ledCard.classList.toggle('is-ready', isOn);
+    ledCard.classList.toggle('is-low', !isOn);
+
+    if (ledValue) ledValue.textContent = isOn ? 'Allumée' : 'Éteinte';
+    if (ledMessage) ledMessage.textContent = isOn
+        ? 'LED active — signal opérationnel.'
+        : 'LED inactive.';
+}
+
+function updateDashboardDisplay(data) {
+    if (!data) return;
+
+    if (Object.prototype.hasOwnProperty.call(data, 'stock')) {
+        updateStockDisplay(data.stock);
     }
+    if (Object.prototype.hasOwnProperty.call(data, 'distance')) {
+        updateDistanceDisplay(data.distance);
+    }
+    if (Object.prototype.hasOwnProperty.call(data, 'temperature') || Object.prototype.hasOwnProperty.call(data, 'humidite')) {
+        updateAmbianceDisplay(data.temperature, data.humidite);
+    }
+    if (Object.prototype.hasOwnProperty.call(data, 'luminosite')) {
+        updateLuminositeDisplay(data.luminosite);
+    }
+    if (Object.prototype.hasOwnProperty.call(data, 'co2') || Object.prototype.hasOwnProperty.call(data, 'tvoc')) {
+        updateAirDisplay(data.co2, data.tvoc);
+    }
+    if (Object.prototype.hasOwnProperty.call(data, 'led')) {
+        updateLedDisplay(data.led);
+    }
+}
 
     async function refreshDashboardData(container) {
         if (dashboardRefreshInProgress || !container.isConnected) return;
