@@ -1,6 +1,9 @@
 <?php
 
 namespace models;
+
+use PDO;
+
 class Actionneur
 {
     private $conn;
