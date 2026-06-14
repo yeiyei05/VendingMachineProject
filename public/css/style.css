@@ -1,6 +1,3 @@
-/* public/css/style.css */
-
-/* --- CONFIGURATION DES THEMES (CLICKUP/FUTURISTE) --- */
 :root[data-theme="dark"] {
     --bg-color: #0a0b10;
     --card-bg: #121420;
@@ -16,9 +13,9 @@
 :root[data-theme="light"] {
     --bg-color: #f1f5f9;
     --card-bg: #ffffff;
-    --neon-blue: #0284c7;      /* Bleu plus dense pour rester lisible sur fond clair */
-    --neon-purple: #7c3aed;    /* Violet profond */
-    --neon-green: #16a34a;    /* Vert émeraude */
+    --neon-blue: #0284c7;
+    --neon-purple: #7c3aed;
+    --neon-green: #16a34a;
     --text-color: #0f172a;
     --text-muted: #64748b;
     --border-glow: rgba(2, 132, 199, 0.1);
@@ -30,7 +27,6 @@
     box-sizing: border-box;
     margin: 0;
     padding: 0;
-    /* Transition ultra-smooth sur tous les changements de couleur ou de thème */
     transition: background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1),
     border-color 0.3s cubic-bezier(0.4, 0, 0.2, 1),
     color 0.3s cubic-bezier(0.4, 0, 0.2, 1),
@@ -46,14 +42,13 @@ body {
     min-height: 100vh;
 }
 
-/* Layout en colonnes : Sidebar à gauche, contenu à droite */
+
 .app-container {
     display: flex;
     width: 100%;
     min-height: 100vh;
 }
 
-/* --- LAYOUT BARRE LATÉRALE (SIDEBAR) --- */
 .sidebar {
     width: 280px;
     background: rgba(18, 20, 32, 0.95);
@@ -118,7 +113,7 @@ body {
     box-shadow: inset 4px 0 0 #ef4444;
 }
 
-/* --- ZONE PRINCIPALE DE DROITE --- */
+
 .main-content {
     flex-grow: 1;
     display: flex;
@@ -126,7 +121,6 @@ body {
     min-height: 100vh;
 }
 
-/* Header supérieur */
 .top-header {
     background: rgba(18, 20, 32, 0.05);
     border-bottom: 1px solid rgba(255, 255, 255, 0.05);
@@ -136,7 +130,7 @@ body {
     align-items: center;
 }
 
-/* Bouton Interrupteur de Thème */
+
 .theme-switch {
     background: var(--card-bg);
     border: 1px solid var(--neon-blue);
@@ -155,7 +149,6 @@ body {
     transform: translateY(-1px);
 }
 
-/* Conteneur de rendu dynamique (Animations douces) */
 main {
     max-width: 1200px;
     width: 100%;
@@ -169,7 +162,6 @@ main {
     to { opacity: 1; transform: translateY(0); }
 }
 
-/* --- COMPOSANTS GRAPHIC INTERFACES (TES CARTES) --- */
 .cyber-card {
     background: var(--card-bg);
     border: 1px solid rgba(255, 255, 255, 0.05);
@@ -185,7 +177,7 @@ main {
     border-color: var(--neon-blue);
 }
 
-/* Grille */
+
 .grid-devices {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -193,7 +185,7 @@ main {
     margin-top: 30px;
 }
 
-/* --- DASHBOARD STOCK --- */
+
 .dashboard-stock-shell {
     display: grid;
     gap: 28px;
@@ -457,7 +449,7 @@ footer {
     margin-top: auto;
 }
 
-/* --- ACCUEIL IMMERSIF (LANDING PAGE) --- */
+
 .hero-landing {
     position: relative;
     height: calc(100vh - 80px);
@@ -496,7 +488,7 @@ footer {
     margin-bottom: 40px;
 }
 
-/* Liens CGU et Mentions Légales */
+
 .landing-footer {
     margin-top: auto;
     display: flex;
@@ -517,7 +509,7 @@ footer {
     text-shadow: 0 0 8px var(--neon-blue);
 }
 
-/* Fenêtres Modales pour CGU / Mentions */
+
 .cyber-modal {
     display: block;
     visibility: hidden;
@@ -539,7 +531,7 @@ footer {
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Quand la modale s'ouvre, elle devient visible et s'anime */
+
 .cyber-modal.active {
     visibility: visible;
     transform: translate(-50%, -50%) scale(1);
@@ -560,7 +552,7 @@ footer {
 
 .modal-overlay.active { display: block; }
 
-/* Lien "Système" Cliquable */
+
 .system-breadcrumb {
     cursor: pointer;
     transition: color 0.2s;
@@ -625,7 +617,7 @@ footer {
     }
 }
 
-/* Valeurs réduites pour les cartes secondaires */
+
 .stock-metric__value--sm {
     font-size: 2rem;
 }
