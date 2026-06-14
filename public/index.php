@@ -32,9 +32,9 @@ $database = new Database();
 $db       = $database->getConnection();
 $db_isep  = $database->getISEPConnection();
 
-$page = isset($_GET['page']) ? $_GET['page'] : 'dashboard';
+$page = isset($_GET['page']) ? $_GET['page'] : 'home';
 
-if (!isset($_SESSION['username']) && !in_array($page, ['login', 'register'])) {
+if (!isset($_SESSION['username']) && !in_array($page, ['login', 'register', 'home'])) {
     header('Location: index.php?page=login');
     exit();
 }
@@ -54,6 +54,9 @@ switch ($page) {
         $authController = new controllers\AuthController($db);
         $authController->logout();
         break;
+    case 'home':
+        include __DIR__ . '/../views/dashboard/landing.php';
+        break;
     case 'dashboard':
         $dashboardController = new controllers\DashboardController($db_isep);
         $dashboardController->showDashboard();
@@ -62,8 +65,11 @@ switch ($page) {
         $dashboardController = new controllers\DashboardController($db_isep);
         $dashboardController->getDashboardData();
         break;
+    case 'capteurs':
+        echo '<div class="cyber-card"><h2>⚙️ Console de Configuration</h2><p>Liaison du bus système en cours...</p></div>';
+        break;
     default:
-        header('Location: index.php?page=dashboard');
+        header('Location: index.php?page=home');
         exit();
 }
 

@@ -14,7 +14,9 @@
             VENDING<span>OS</span>
         </div>
         <ul class="sidebar-menu">
+            <li><a href="index.php?page=home" class="menu-link <?php echo $page === 'home' ? 'active' : ''; ?>" data-page="home">🏠 Accueil</a></li>
             <li><a href="index.php?page=dashboard" class="menu-link <?php echo $page === 'dashboard' ? 'active' : ''; ?>" data-page="dashboard">📊 Dashboard</a></li>
+            <li><a href="index.php?page=capteurs" class="menu-link <?php echo $page === 'capteurs' ? 'active' : ''; ?>" data-page="capteurs">🌡️ Capteurs & Actions</a></li>
             <li><a href="index.php?page=logout" class="logout-btn">🚪 Déconnexion</a></li>
         </ul>
     </aside>
@@ -22,7 +24,8 @@
     <div class="main-content">
         <header class="top-header">
             <div style="font-weight: 500; font-size: 1.1rem;">
-                <span style="color: var(--neon-blue); text-transform: uppercase; font-weight: bold;"><?php echo strtoupper($page); ?></span>
+                <span class="system-breadcrumb" id="systemBreadcrumb">Accueil</span> /
+                <span id="current-page-title" style="color: var(--neon-blue); text-transform: uppercase; font-weight: bold;"><?php echo $page; ?></span>
             </div>
             <button class="theme-switch" id="themeToggle">
                 <span id="themeIcon">🌙</span> <span id="themeText">Mode Sombre</span>
@@ -75,6 +78,12 @@
             themeIcon.innerText = '☀️'; themeText.innerText = 'Mode Clair';
         }
     }
+
+    // --- CLIC SUR ACCUEIL (BREADCRUMB) ---
+    document.getElementById('systemBreadcrumb').addEventListener('click', () => {
+        const homeLink = document.querySelector('[data-page="home"]');
+        if (homeLink) homeLink.click();
+    });
 
     // --- INTERACTION MODALES ---
     function openModal(id) {
