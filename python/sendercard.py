@@ -1,266 +1,294 @@
-"""
-stm32_commander.py
-==================
-Interface Python pour STM32 Nucleo L412KB — COM3 / 115200 bauds
-
-- Thread de lecture continu : affiche tout ce que le STM32 envoie en temps réel
-- Thread principal : invite de commandes interactive
-- Toutes les réponses sont horodatées et colorées
-
-Utilisation :
-    python stm32_commander.py
-
-Commandes disponibles (envoyées à la carte) :
-    PING              → PONG
-    STATUS            → dump état complet
-    LED:ON / LED:OFF  → pilote PC3
-    MOTOR:<steps>     → avance le moteur
-    quit / exit       → quitter le script
-"""
-
+import tkinter as tk
+from tkinter import ttk, scrolledtext, messagebox
 import serial
 import threading
+import queue
 import time
 import sys
-import os
 
-# ── Configuration ─────────────────────────────────────────────────────────────
+# ── Configuration du Port ─────────────────────────────────────────────────────
+PORT = "COM3"
+BAUD = 115200
+TIMEOUT = 0.1
 
-PORT     = "COM3"
-BAUD     = 115200
-TIMEOUT  = 1          # secondes, timeout lecture série (non bloquant)
+# ── Palette de Couleurs Modern Dark ───────────────────────────────────────────
+BG_MAIN      = "#121214"  # Fond principal ultra-sombre
+BG_PANEL     = "#1a1a1e"  # Fond des sections / cartes
+BG_INPUT     = "#26262b"  # Fond des zones de saisie
+FG_TEXT      = "#e1e1e6"  # Texte principal
+FG_MUTED     = "#7c7c8a"  # Texte secondaire / Timestamps
 
-# ── Codes couleur ANSI ────────────────────────────────────────────────────────
+COLOR_CYAN   = "#61afef"  # RX / Info
+COLOR_GREEN  = "#98c379"  # ACK / OK
+COLOR_RED    = "#e06c75"  # ERR / Alarmes
+COLOR_YELLOW = "#e5c07b"  # WARN / Attention
+COLOR_BLUE   = "#4dc4ff"  # TX / Commandes
 
-class C:
-    RESET  = "\033[0m"
-    BOLD   = "\033[1m"
-    RED    = "\033[91m"
-    GREEN  = "\033[92m"
-    YELLOW = "\033[93m"
-    BLUE   = "\033[94m"
-    CYAN   = "\033[96m"
-    GREY   = "\033[90m"
-    WHITE  = "\033[97m"
+class STM32CommanderGUI:
+    def __init__(self, root):
+        self.root = root
+        self.root.title("🎛️ STM32 Nucleo Commander")
+        self.root.geometry("1000x650")
+        self.root.configure(bg=BG_MAIN)
 
-def enable_ansi_windows():
-    """Active les couleurs ANSI sur Windows 10+."""
-    if sys.platform == "win32":
-        import ctypes
-        kernel32 = ctypes.windll.kernel32
-        kernel32.SetConsoleMode(kernel32.GetStdHandle(-11), 7)
+        # États globaux
+        self.tx_count = 0
+        self.rx_count = 0
+        self.ser = None
+        self.stop_event = threading.Event()
+        self.msg_queue = queue.Queue()
 
-# ── Formatage horodaté ─────────────────────────────────────────────────────────
+        # Style global des widgets
+        self.setup_styles()
 
-def ts():
-    """Retourne un timestamp court : HH:MM:SS.mmm"""
-    t = time.time()
-    ms = int((t % 1) * 1000)
-    return time.strftime("%H:%M:%S", time.localtime(t)) + f".{ms:03d}"
+        # Construction de l'interface
+        self.create_layout()
 
-def colorize_rx(line: str) -> str:
-    """Colorie une ligne reçue selon son préfixe."""
-    if line.startswith("[ERR]"):
-        return f"{C.RED}{line}{C.RESET}"
-    if line.startswith("[WARN]"):
-        return f"{C.YELLOW}{line}{C.RESET}"
-    if line.startswith("[ACK]"):
-        return f"{C.GREEN}{line}{C.RESET}"
-    if line.startswith("[HB]"):
-        return f"{C.GREY}{line}{C.RESET}"
-    if line.startswith("[RX]"):
-        return f"{C.CYAN}{line}{C.RESET}"
-    if line.startswith("[CMD]"):
-        return f"{C.BLUE}{line}{C.RESET}"
-    if line.startswith("[DBG]"):
-        return f"{C.GREY}{line}{C.RESET}"
-    if line.startswith("PONG"):
-        return f"{C.GREEN}{C.BOLD}{line}{C.RESET}"
-    if line.startswith("---"):
-        return f"{C.YELLOW}{line}{C.RESET}"
-    if line.startswith("==="):
-        return f"{C.WHITE}{C.BOLD}{line}{C.RESET}"
-    return line
+        # Connexion Série & Threads
+        self.init_serial()
 
-# ── État global ────────────────────────────────────────────────────────────────
+        # Liaison de la fermeture de fenêtre
+        self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
 
-stop_event   = threading.Event()   # Signal d'arrêt propre
-rx_count     = 0                   # Lignes reçues
-tx_count     = 0                   # Commandes envoyées
-last_ack     = ""                  # Dernier ACK reçu
+        # Boucle de surveillance de la queue de messages (toutes les 50ms)
+        self.root.after(50, self.process_queue)
 
-# ── Thread de lecture ─────────────────────────────────────────────────────────
+    def setup_styles(self):
+        style = ttk.Style()
+        style.theme_use("clam")
+        style.configure(".", background=BG_MAIN, foreground=FG_TEXT)
+        style.configure("TLabel", background=BG_PANEL, foreground=FG_TEXT, font=("Segoe UI", 10))
+        style.configure("Title.TLabel", background=BG_PANEL, font=("Segoe UI", 11, "bold"))
 
-def reader_thread(ser: serial.Serial):
-    """
-    Lit en continu sur le port série et affiche chaque ligne.
-    S'exécute dans un thread dédié pour ne pas bloquer l'invite de commandes.
-    """
-    global rx_count, last_ack
-    buffer = b""
+        # Style des boutons
+        style.configure("TButton", background=BG_INPUT, foreground=FG_TEXT, borderwidth=0, font=("Segoe UI", 10, "bold"), padding=8)
+        style.map("TButton", background=[("active", "#323239")])
 
-    while not stop_event.is_set():
-        try:
-            chunk = ser.read(ser.in_waiting or 1)
-        except serial.SerialException as e:
-            print(f"\n{C.RED}[READER] Erreur série : {e}{C.RESET}")
-            stop_event.set()
-            break
+        style.configure("Action.TButton", background=COLOR_BLUE, foreground=BG_MAIN)
+        style.map("Action.TButton", background=[("active", "#7ad5ff")])
 
-        if not chunk:
-            continue
+        style.configure("Alert.TButton", background=COLOR_RED, foreground=FG_TEXT)
+        style.map("Alert.TButton", background=[("active", "#ff8890")])
 
-        buffer += chunk
+    def create_layout(self):
+        # ── 1. BARRE SUPÉRIEURE (Infos Connexion) ──────────────────────────────
+        top_bar = tk.Frame(self.root, bg=BG_PANEL, height=50, bd=0)
+        top_bar.pack(fill=tk.X, padx=10, pady=5)
 
-        # Traiter toutes les lignes complètes dans le buffer
-        while b"\n" in buffer:
-            line_bytes, buffer = buffer.split(b"\n", 1)
-            # Supprimer \r éventuel
-            line = line_bytes.decode("utf-8", errors="replace").rstrip("\r")
-            if not line:
-                continue
+        lbl_info = ttk.Label(top_bar, text=f" PORT: {PORT}  |  BAUDRATE: {BAUD} bauds", font=("Consolas", 11, "bold"), background=BG_PANEL)
+        lbl_info.pack(side=tk.LEFT, padx=15, pady=10)
 
-            rx_count += 1
-            if "[ACK]" in line:
-                last_ack = line
+        self.lbl_status = tk.Label(top_bar, text="CONNEXION EN COURS...", bg=BG_PANEL, fg=COLOR_YELLOW, font=("Segoe UI", 10, "bold"))
+        self.lbl_status.pack(side=tk.RIGHT, padx=15)
 
-            # Affichage : efface la ligne de saisie courante, affiche, réaffiche le prompt
-            sys.stdout.write("\r\033[2K")   # Efface la ligne courante
-            print(f"{C.GREY}[{ts()}]{C.RESET} {colorize_rx(line)}")
-            sys.stdout.write(f"{C.YELLOW}>>> {C.RESET}")
-            sys.stdout.flush()
+        # Conteneur principal splité en 2 (Gauche = Commandes, Droite = Console)
+        main_container = tk.Frame(self.root, bg=BG_MAIN)
+        main_container.pack(fill=tk.BOTH, expand=True, padx=10, pady=5)
 
+        # ── 2. PANNEAU GAUCHE (Contrôles matériels) ────────────────────────────
+        ctrl_panel = tk.Frame(main_container, bg=BG_PANEL, width=280)
+        ctrl_panel.pack(side=tk.LEFT, fill=tk.Y, padx=(0, 5))
+        ctrl_panel.pack_propagate(False)
 
-# ── Envoi d'une commande ──────────────────────────────────────────────────────
+        # Section Système
+        self.create_panel_section(ctrl_panel, "📟 SYSTÈME")
+        ttk.Button(ctrl_panel, text="PING (Test)", command=lambda: self.send_cmd("PING")).pack(fill=tk.X, padx=15, pady=5)
+        ttk.Button(ctrl_panel, text="STATUS (État complet)", command=lambda: self.send_cmd("STATUS")).pack(fill=tk.X, padx=15, pady=5)
 
-def send_cmd(ser: serial.Serial, cmd: str):
-    """Envoie une commande (ajoute \\n) et log l'envoi."""
-    global tx_count
-    tx_count += 1
-    raw = (cmd.strip() + "\n").encode("utf-8")
-    try:
-        ser.write(raw)
-        ser.flush()
-        print(f"{C.GREY}[{ts()}]{C.RESET} {C.BOLD}{C.WHITE}[TX #{tx_count}]{C.RESET} {cmd}")
-    except serial.SerialException as e:
-        print(f"{C.RED}[TX] Erreur : {e}{C.RESET}")
+        # Section Actuateurs
+        self.create_panel_section(ctrl_panel, "💡 PILOTAGE LED (PC3)")
+        btn_led_on = ttk.Button(ctrl_panel, text="ALLUMER", style="Action.TButton", command=lambda: self.send_cmd("LED:ON"))
+        btn_led_on.pack(fill=tk.X, padx=15, pady=4)
+        btn_led_off = ttk.Button(ctrl_panel, text="ÉTEINDRE", command=lambda: self.send_cmd("LED:OFF"))
+        btn_led_off.pack(fill=tk.X, padx=15, pady=4)
 
+        # Section Moteur
+        self.create_panel_section(ctrl_panel, "⚙️ MOTEUR PAS-À-PAS")
+        motor_frame = tk.Frame(ctrl_panel, bg=BG_PANEL)
+        motor_frame.pack(fill=tk.X, padx=15, pady=5)
 
-# ── Aide ─────────────────────────────────────────────────────────────────────
+        ttk.Label(motor_frame, text="Nbr de pas :", background=BG_PANEL).pack(side=tk.LEFT)
+        self.ent_steps = tk.Entry(motor_frame, bg=BG_INPUT, fg=FG_TEXT, insertbackground=FG_TEXT, bd=0, width=10, font=("Segoe UI", 11))
+        self.ent_steps.pack(side=tk.RIGHT, fill=tk.X, expand=True, padx=(5, 0), ipady=3)
+        self.ent_steps.insert(0, "512")
 
-HELP = f"""
-{C.BOLD}{C.WHITE}Commandes disponibles :{C.RESET}
-  {C.GREEN}PING{C.RESET}           → Teste la connexion (répond PONG)
-  {C.GREEN}STATUS{C.RESET}         → Dump état interne du STM32
-  {C.GREEN}LED:ON{C.RESET}         → Allume LED PC3
-  {C.GREEN}LED:OFF{C.RESET}        → Éteint LED PC3
-  {C.GREEN}MOTOR:<n>{C.RESET}      → Avance le moteur de n pas  (ex: MOTOR:512)
-  {C.CYAN}stats{C.RESET}          → Affiche les compteurs locaux Python
-  {C.CYAN}help{C.RESET}           → Cet écran
-  {C.RED}quit / exit{C.RESET}    → Quitter proprement
-"""
+        ttk.Button(ctrl_panel, text="⏩ Avancer Moteur", command=self.send_motor_cmd).pack(fill=tk.X, padx=15, pady=5)
 
-# ── Main ──────────────────────────────────────────────────────────────────────
+        # ── 3. PANNEAU DROIT (Console temps réel) ──────────────────────────────
+        console_panel = tk.Frame(main_container, bg=BG_MAIN)
+        console_panel.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True)
 
-def main():
-    enable_ansi_windows()
-
-    print(f"""
-{C.BOLD}{C.WHITE}╔══════════════════════════════════════════════╗
-║   STM32 UART Commander — Python interface    ║
-║   Port : {PORT:<10} Baud : {BAUD:<10}     ║
-╚══════════════════════════════════════════════╝{C.RESET}
-""")
-
-    # ── Ouverture du port ─────────────────────────────────────────────────────
-    try:
-        ser = serial.Serial(
-            port     = PORT,
-            baudrate = BAUD,
-            bytesize = serial.EIGHTBITS,
-            parity   = serial.PARITY_NONE,
-            stopbits = serial.STOPBITS_ONE,
-            timeout  = TIMEOUT,
-            xonxoff  = False,
-            rtscts   = False,
-            dsrdtr   = False,
+        # Zone de texte ScrolledText pour les logs
+        self.txt_console = scrolledtext.ScrolledText(
+            console_panel, bg=BG_PANEL, fg=FG_TEXT, insertbackground=FG_TEXT,
+            bd=0, font=("Consolas", 10), highlightthickness=0
         )
-        # Pas de toggle RTS/DTR : évite le reset involontaire du Nucleo
-        ser.rts = False
-        ser.dtr = False
-        print(f"{C.GREEN}[OK]{C.RESET} Port {PORT} ouvert à {BAUD} bauds")
-    except serial.SerialException as e:
-        print(f"{C.RED}[ERREUR]{C.RESET} Impossible d'ouvrir {PORT} : {e}")
-        print(f"  → Vérifiez que la carte est branchée et que {PORT} est correct")
-        sys.exit(1)
+        self.txt_console.pack(fill=tk.BOTH, expand=True)
 
-    # ── Démarrage thread lecture ──────────────────────────────────────────────
-    t = threading.Thread(target=reader_thread, args=(ser,), daemon=True, name="RX")
-    t.start()
-    print(f"{C.GREEN}[OK]{C.RESET} Thread lecture RX démarré")
-    print(f"{C.GREY}      Tapez 'help' pour la liste des commandes{C.RESET}\n")
+        # Configuration des couleurs de tags pour le formatage du texte
+        self.txt_console.tag_config("ts", foreground=FG_MUTED)
+        self.txt_console.tag_config("default", foreground=FG_TEXT)
+        self.txt_console.tag_config("err", foreground=COLOR_RED, font=("Consolas", 10, "bold"))
+        self.txt_console.tag_config("warn", foreground=COLOR_YELLOW)
+        self.txt_console.tag_config("ack", foreground=COLOR_GREEN, font=("Consolas", 10, "bold"))
+        self.txt_console.tag_config("tx", foreground=COLOR_BLUE)
+        self.txt_console.tag_config("cyan", foreground=COLOR_CYAN)
 
-    # Petite pause pour laisser le STM32 envoyer sa bannière de boot
-    time.sleep(0.5)
+        # Barre d'envoi manuelle en bas de la console
+        input_frame = tk.Frame(console_panel, bg=BG_MAIN)
+        input_frame.pack(fill=tk.X, pady=(5, 0))
 
-    # ── Boucle de commandes interactive ──────────────────────────────────────
-    try:
-        while not stop_event.is_set():
+        self.ent_cmd = tk.Entry(input_frame, bg=BG_PANEL, fg=FG_TEXT, insertbackground=FG_TEXT, bd=0, font=("Consolas", 11))
+        self.ent_cmd.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, ipady=8, padx=(0, 5))
+        self.ent_cmd.bind("<Return>", lambda event: self.send_manual_cmd())
+
+        btn_send = ttk.Button(input_frame, text="ENVOYER", command=self.send_manual_cmd)
+        btn_send.pack(side=tk.RIGHT, ipady=2)
+
+        # ── 4. BARRE DE STATUT (Pied de page) ──────────────────────────────────
+        self.status_bar = tk.Frame(self.root, bg=BG_PANEL, height=25)
+        self.status_bar.pack(fill=tk.X, side=tk.BOTTOM, padx=10, pady=(0, 5))
+
+        self.lbl_tx_counter = ttk.Label(self.status_bar, text="TX: 0", font=("Consolas", 9))
+        self.lbl_tx_counter.pack(side=tk.LEFT, padx=15, pady=3)
+
+        self.lbl_rx_counter = ttk.Label(self.status_bar, text="RX: 0", font=("Consolas", 9))
+        self.lbl_rx_counter.pack(side=tk.LEFT, padx=15, pady=3)
+
+        self.lbl_last_ack = ttk.Label(self.status_bar, text="Dernier ACK: Aucun", font=("Consolas", 9), foreground=COLOR_GREEN)
+        self.lbl_last_ack.pack(side=tk.RIGHT, padx=15, pady=3)
+
+    def create_panel_section(self, parent, title):
+        """Aide visuelle pour séparer les catégories dans le menu de gauche"""
+        lbl = ttk.Label(parent, text=title, style="Title.TLabel")
+        lbl.pack(fill=tk.X, padx=10, pady=(15, 5))
+        sep = tk.Frame(parent, height=1, bg="#2d2d34", bd=0)
+        sep.pack(fill=tk.X, padx=10, pady=(0, 10))
+
+    # ── Gestion des événements Série / Threads ─────────────────────────────────
+    def init_serial(self):
+        try:
+            self.ser = serial.Serial(
+                port=PORT, baudrate=BAUD, bytesize=serial.EIGHTBITS,
+                parity=serial.PARITY_NONE, stopbits=serial.STOPBITS_ONE,
+                timeout=TIMEOUT, xonxoff=False, rtscts=False, dsrdtr=False
+            )
+            self.ser.rts = False
+            self.ser.dtr = False
+
+            self.lbl_status.config(text="● CONNECTÉ", fg=COLOR_GREEN)
+            self.log_to_console(f"[SYSTEM] Connecté avec succès sur {PORT} ({BAUD} bauds)\n", "ack")
+
+            # Start Reader Thread
+            self.reader_thread = threading.Thread(target=self.serial_listen_loop, daemon=True)
+            self.reader_thread.start()
+
+        except serial.SerialException as e:
+            self.lbl_status.config(text="● DÉCONNECTÉ (ERREUR)", fg=COLOR_RED)
+            self.log_to_console(f"[ERREUR] Impossible d'ouvrir le port {PORT} : {e}\n", "err")
+            messagebox.showerror("Erreur Port Série", f"Impossible d'ouvrir le port {PORT}.\nVérifiez votre carte STM32.")
+
+    def serial_listen_loop(self):
+        """Lit en continu les trames du STM32 (Threadé)"""
+        buffer = b""
+        while not self.stop_event.is_set() and self.ser and self.ser.is_open:
             try:
-                sys.stdout.write(f"{C.YELLOW}>>> {C.RESET}")
-                sys.stdout.flush()
-                user_input = input().strip()
-            except (EOFError, KeyboardInterrupt):
-                print(f"\n{C.YELLOW}[INFO]{C.RESET} Interruption clavier")
+                chunk = self.ser.read(self.ser.in_waiting or 1)
+                if not chunk:
+                    continue
+                buffer += chunk
+                while b"\n" in buffer:
+                    line_bytes, buffer = buffer.split(b"\n", 1)
+                    line = line_bytes.decode("utf-8", errors="replace").rstrip("\r")
+                    if line:
+                        self.msg_queue.put(line)
+            except Exception:
                 break
 
-            if not user_input:
-                continue
+    def process_queue(self):
+        """Vide la file d'attente et met à jour l'IHM graphique de façon thread-safe"""
+        while not self.msg_queue.empty():
+            try:
+                line = self.msg_queue.get_nowait()
+                self.rx_count += 1
+                self.lbl_rx_counter.config(text=f"RX: {self.rx_count}")
 
-            cmd_lower = user_input.lower()
+                # Détection du tag de couleur selon la réponse du microcontrôleur
+                tag = "cyan"
+                if line.startswith("[ERR]"): tag = "err"
+                elif line.startswith("[WARN]"): tag = "warn"
+                elif line.startswith("[ACK]"):
+                    tag = "ack"
+                    self.lbl_last_ack.config(text=f"Dernier ACK: {line}")
+                elif line.startswith("[HB]") or line.startswith("[DBG]"): tag = "ts"
+                elif line.startswith("[CMD]"): tag = "tx"
+                elif "PONG" in line: tag = "ack"
 
-            # ── Commandes locales Python ──────────────────────────────────────
-            if cmd_lower in ("quit", "exit", "q"):
-                print(f"{C.YELLOW}[INFO]{C.RESET} Fermeture...")
+                self.log_to_console(line + "\n", tag)
+            except queue.Empty:
                 break
 
-            if cmd_lower == "help":
-                print(HELP)
-                continue
+        # Se relance automatiquement toutes les 50 millisecondes
+        self.root.after(50, self.process_queue)
 
-            if cmd_lower == "stats":
-                print(f"""
-{C.BOLD}Statistiques locales :{C.RESET}
-  Lignes reçues  : {rx_count}
-  Commandes TX   : {tx_count}
-  Dernier ACK    : {last_ack if last_ack else '(aucun)'}
-  Port           : {PORT} @ {BAUD}
-  Thread RX      : {'vivant' if t.is_alive() else f'{C.RED}MORT{C.RESET}'}
-""")
-                continue
+    # ── Actions UI ────────────────────────────────────────────────────────────
+    def send_cmd(self, cmd_string):
+        """Envoie une commande brute au STM32"""
+        if not self.ser or not self.ser.is_open:
+            self.log_to_console("[ERREUR GUI] Impossible d'envoyer, port fermé.\n", "err")
+            return
 
-            # ── Validation basique avant envoi ────────────────────────────────
-            valid_prefixes = ("PING", "STATUS", "LED:ON", "LED:OFF", "MOTOR:")
-            cmd_upper = user_input.upper()
-            is_valid = any(cmd_upper.startswith(p) for p in valid_prefixes)
+        try:
+            self.tx_count += 1
+            self.lbl_tx_counter.config(text=f"TX: {self.tx_count}")
 
-            if not is_valid:
-                print(f"{C.YELLOW}[WARN]{C.RESET} Commande non reconnue localement : '{user_input}'")
-                print(f"       Envoi quand même... (tapez 'help' pour la liste)")
+            # Envoi physique sur l'UART
+            raw = (cmd_string.strip() + "\n").encode("utf-8")
+            self.ser.write(raw)
+            self.ser.flush()
 
-            # ── Envoi à la carte ──────────────────────────────────────────────
-            send_cmd(ser, user_input.upper() if is_valid else user_input)
+            # Log l'envoi dans la console locale
+            self.log_to_console(f"[TX #{self.tx_count}] {cmd_string}\n", "tx")
+        except Exception as e:
+            self.log_to_console(f"[ERREUR D'ENVOI] {e}\n", "err")
 
-            # Attente courte pour laisser la réponse arriver avant le prochain prompt
-            time.sleep(0.15)
+    def send_manual_cmd(self):
+        cmd = self.ent_cmd.get().strip()
+        if cmd:
+            self.send_cmd(cmd)
+            self.ent_cmd.delete(0, tk.END)
 
-    finally:
-        stop_event.set()
-        time.sleep(0.2)
-        ser.close()
-        print(f"\n{C.GREEN}[OK]{C.RESET} Port {PORT} fermé. Au revoir.")
-        print(f"{C.GREY}     TX={tx_count} RX_lignes={rx_count}{C.RESET}")
+    def send_motor_cmd(self):
+        steps = self.ent_steps.get().strip()
+        if steps.isdigit():
+            self.send_cmd(f"MOTOR:{steps}")
+        else:
+            messagebox.showwarning("Saisie invalide", "Veuillez entrer un nombre entier de pas.")
 
+    def log_to_console(self, text, tag="default"):
+        """Ajoute du texte horodaté proprement dans le bloc terminal graphique"""
+        self.txt_console.config(state=tk.NORMAL)
 
+        # Insertion du Timestamp
+        current_ts = time.strftime("%H:%M:%S", time.localtime()) + f".{int((time.time() % 1) * 1000):03d} "
+        self.txt_console.insert(tk.END, f"[{current_ts}] ", "ts")
+
+        # Insertion du message typé
+        self.txt_console.insert(tk.END, text, tag)
+
+        # Auto-scroll vers le bas
+        self.txt_console.see(tk.END)
+        self.txt_console.config(state=tk.DISABLED)
+
+    def on_closing(self):
+        """Fermeture propre de l'application et libération des ressources"""
+        self.stop_event.set()
+        if self.ser and self.ser.is_open:
+            self.ser.close()
+        self.root.destroy()
+
+# ── Lancement de l'IHM ────────────────────────────────────────────────────────
 if __name__ == "__main__":
-    main()
+    root = tk.Tk()
+    app = STM32CommanderGUI(root)
+    root.mainloop()
