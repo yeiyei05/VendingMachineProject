@@ -59,7 +59,7 @@ def log_success(msg):
     if state["live_logs"]: rprint_safe(f"{log_ts()} [bold green]SUCCESS[/bold green] | {msg}")
 
 def log_warn(msg):
-    if state["live_logs"]: rprint_safe(f"{log_ts()} [bold yellow]WARN[/bold yellow] | {msg}")
+    if state["live_logs"]: rprint_safe(f"{log_ts()} [bold yellow]WARNING[/bold yellow] | {msg}")
 
 def log_error(msg):
     if state["live_logs"]: rprint_safe(f"{log_ts()} [bold red]ERROR[/bold red] | {msg}")
@@ -189,9 +189,9 @@ def background_worker():
                 # Ce qu'on reçoit de la carte = Émission de la carte -> Incrémentation TX
                 state["tx_count"] += 1
 
-                if "[ERR]" in ligne or "/!\\" in ligne:
+                if "[ERR]" in ligne:
                     log_error(f"STM32: {ligne}")
-                elif "[WARN]" in ligne:
+                elif "[WARN]" in ligne or "/!\\" in ligne:
                     log_warn(f"STM32: {ligne}")
                 else:
                     log_tx(ligne)  # Affiché sous le tag TX (Magenta)
