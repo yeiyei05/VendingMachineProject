@@ -439,7 +439,7 @@ def cmd_fetch(args):
             user=DB_USER, password=DB_PASSWORD
         )
         cursor = conn.cursor()
-        cursor.execute("SELECT id, distance, stock, created_at FROM distance ORDER BY id DESC LIMIT %s", (limit,))
+        cursor.execute("SELECT id, distance, stock FROM distance ORDER BY id DESC LIMIT %s", (limit,))
         rows = cursor.fetchall()
         cursor.execute("SELECT COUNT(*) FROM distance")
         total = cursor.fetchone()[0]
