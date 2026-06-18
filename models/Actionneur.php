@@ -1,5 +1,4 @@
 <?php
-
 namespace models;
 
 use PDO;
@@ -13,23 +12,29 @@ class Actionneur
         $this->conn = $db;
     }
 
-    public function updateStatus($deviceName, $value)
+    public function updateStatus($type, $value)
     {
+        try {
+            switch ($type) {
+                case 'moteur':
+                    $stmt = $this->conn->prepare(
+                        "INSERT INTO moteur (action) VALUES (:action)"
+                    );
+                    $stmt->bindParam(":action", $value);
+                    return $stmt->execute();
 
-        $queryFind = "SELECT id FROM devices WHERE name = :name AND type = 'actuator' LIMIT 1";
-        $stmtFind = $this->conn->prepare($queryFind);
-        $stmtFind->bindParam(":name", $deviceName);
-        $stmtFind->execute();
-        $device = $stmtFind->fetch(PDO::FETCH_ASSOC);
+                case '7segments':
+                    $stmt = $this->conn->prepare(
+                        "INSERT INTO segments (source) VALUES (:source)"
+                    );
+                    $stmt->bindParam(":source", $value);
+                    return $stmt->execute();
 
-        if ($device) {
-
-            $queryInsert = "INSERT INTO device_history (device_id, value_recorded) VALUES (:device_id, :value)";
-            $stmtInsert = $this->conn->prepare($queryInsert);
-            $stmtInsert->bindParam(":device_id", $device['id']);
-            $stmtInsert->bindParam(":value", $value);
-            return $stmtInsert->execute();
+                default:
+                    return false;
+            }
+        } catch (\PDOException $e) {
+            return false;
         }
-        return false;
     }
 }

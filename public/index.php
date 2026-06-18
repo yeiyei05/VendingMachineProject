@@ -66,7 +66,20 @@ switch ($page) {
         $dashboardController->getDashboardData();
         break;
     case 'capteurs':
-        echo '<div class="cyber-card"><h2>⚙️ Console de Configuration</h2><p>Liaison du bus système en cours...</p></div>';
+        $capteurCtrl = new controllers\CapteurController($db_isep);
+        $th    = $capteurCtrl->getTemperatureHumidite();
+        $temp  = $th['temperature'] ?? '--';
+        $gaz   = $capteurCtrl->getEmissions()['co2_emission'] ?? '--';
+        $lux   = $capteurCtrl->getLuminosite();
+        $stock = $capteurCtrl->getStock();
+        include __DIR__ . '/../views/capteurs/affichage.php';
+        include __DIR__ . '/../views/actionneurs/boutons.php';
+        break;
+    case 'action':
+        $type = $_GET['type'] ?? '';
+        $val  = $_POST['val'] ?? $_GET['val'] ?? '';
+        $actionneurCtrl = new controllers\ActionneurController($db_isep);
+        $actionneurCtrl->changeStatus($type, $val);
         break;
     default:
         header('Location: index.php?page=home');
