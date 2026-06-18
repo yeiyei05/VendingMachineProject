@@ -78,6 +78,25 @@ prompt_style = Style.from_dict({
     "prompt": "#00d7ff bold",
     "rprompt": "#888888",
 })
+RAINBOW = [
+    "red",
+    "orange1",
+    "yellow",
+    "green",
+    "cyan",
+    "blue",
+    "magenta",
+]
+
+def rainbow_text(text):
+    lines = text.splitlines()
+    result = []
+
+    for i, line in enumerate(lines):
+        color = RAINBOW[i % len(RAINBOW)]
+        result.append(f"[bold {color}]{line}[/]")
+
+    return "\n".join(result)
 
 # ── Anti-bug ANSI ─────────────────────────────────────────────────────────────
 def rprint_safe(rich_text_string, end="\n"):
@@ -120,7 +139,7 @@ def log_tx(msg):
 def log_db(msg):
     """Log des opérations DB"""
     if state["live_logs"]:
-        rprint_safe(f"{log_ts()} [bold white on blue] DB [/bold white on blue]  │ {msg}")
+        rprint_safe(f"{log_ts()} [bold blue on blue] DB [/bold blue on blue]  │ {msg}")
 
 # ── Indicateurs de statut ─────────────────────────────────────────────────────
 def status_dot(ok):
@@ -158,7 +177,7 @@ def print_status_bar():
 
 # ── Banner ────────────────────────────────────────────────────────────────────
 def print_banner():
-    banner = """[bold cyan]
+    banner =rainbow_text("""[bold cyan]
 ⠀⠀⠀⠀⢠⡶⠚⢷⣤⡀⠀⠀⠀⠀⠀⣲⡶⠛⠻⣆⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
 ⠀⠀⠀⢠⡿⠁⠀⠀⠙⣷⣄⠀⢀⣴⡟⠁⠀⠀⢷⢹⡆⠀⠀⠀⠀⠀⠀⠀⠀⠀
 ⠀⠀⠀⣾⠃⠀⠠⠶⠚⠛⠛⠛⠛⠋⠀⠀⣀⡀⢸⠈⣿⠀⠀⠀⠀⠀⠀⠀⠀⠀
@@ -177,13 +196,13 @@ def print_banner():
 ⠀⠀⠀⢸⡇⠀⠙⠀⠀⠀⠀⠀⢠⠞⠁⠀⠀⠀⠀⠀⠀⠀⣿⠇⠀⠀⠀⢸⡇⠀
 ⠀⠀⠀⢸⡇⠀⢸⡆⠀⠀⠀⠀⣟⠀⠀⠀⠀⠀⠀⠀⠀⠀⠛⠀⠀⠀⠀⣸⠇⠀
 ⠀⠀⠀⢸⣿⠀⠀⡇⠀⠀⠀⠀⣿⡀⠀⠀⠀⠀⠀⠀⠀⢀⡇⠀⠀⢀⣴⡟⠁⠀
-⠀⠀⠀⠘⠿⠶⢶⢧⣦⣦⡴⢾⣥⣽⣤⣤⣤⣤⣤⣤⡴⣯⡤⠴⠶⠛⠋⠀⠀⠀ [bold white]██████╗ ██████╗ ██████╗[/bold white]
-[bold white]                              ██╔════╝ ╚════██╗██╔══██╗[/bold white]
-[bold white]                              ██║  ███╗ █████╔╝██████╔╝[/bold white]
-[bold white]                              ██║   ██║ ╚═══██╗██╔══██╗[/bold white]
-[bold white]                              ╚██████╔╝██████╔╝██████╔╝[/bold white]
-[bold white]                               ╚═════╝ ╚═════╝ ╚═════╝[/bold white]
-[/bold cyan]"""
+⠀⠀⠀⠘⠿⠶⢶⢧⣦⣦⡴⢾⣥⣽⣤⣤⣤⣤⣤⣤⡴⣯⡤⠴⠶⠛⠋⠀⠀⠀ [bold blue]██████╗ ██████╗ ██████╗[/bold blue]
+[bold blue]                              ██╔════╝ ╚════██╗██╔══██╗[/bold blue]
+[bold blue]                              ██║  ███╗ █████╔╝██████╔╝[/bold blue]
+[bold blue]                              ██║   ██║ ╚═══██╗██╔══██╗[/bold blue]
+[bold blue]                              ╚██████╔╝██████╔╝██████╔╝[/bold blue]
+[bold blue]                               ╚═════╝ ╚═════╝ ╚═════╝[/bold blue]
+[/bold cyan]""")
 
     version_line = "[dim]v2.0  │  Superviseur CLI & BDD MySQL  │  STM32 UART Bridge[/dim]"
     rprint_safe(Panel(banner + "\n" + version_line, border_style="cyan", padding=(0, 2)))
@@ -413,7 +432,7 @@ def cmd_moteur(args):
 
 def cmd_interval(args):
     if not args:
-        rprint_safe(f"[dim]Intervalle actuel :[/dim] [bold white]{state['save_interval']}s[/bold white]")
+        rprint_safe(f"[dim]Intervalle actuel :[/dim] [bold blue]{state['save_interval']}s[/bold blue]")
         return
     try:
         val = float(args[0])
@@ -501,7 +520,7 @@ def cmd_stats():
     t_traffic.add_column("Valeur")
     t_traffic.add_row("Trames reçues (TX ◀)", f"[bold magenta]{state['tx_count']}[/bold magenta]")
     t_traffic.add_row("Trames envoyées (RX ▶)", f"[bold cyan]{state['rx_count']}[/bold cyan]")
-    t_traffic.add_row("Inserts BDD", f"[bold white]{state['db_insert_count']}[/bold white]")
+    t_traffic.add_row("Inserts BDD", f"[bold blue]{state['db_insert_count']}[/bold blue]")
     t_traffic.add_row("Intervalle sauvegarde", f"[white]{state['save_interval']}s[/white]")
     t_traffic.add_row("Erreurs totales", f"[bold red]{state['error_count']}[/bold red]")
     if state["last_error"]:
@@ -530,7 +549,7 @@ def cmd_stats():
 
 def cmd_watch():
     """Mode surveillance : affichage en live de la distance toutes les secondes."""
-    rprint_safe("[dim]Mode surveillance actif. [bold white]Entrée[/bold white] ou [bold white]q[/bold white] pour quitter.[/dim]")
+    rprint_safe("[dim]Mode surveillance actif. [bold blue]Entrée[/bold blue] ou [bold blue]q[/bold blue] pour quitter.[/dim]")
     state["watch_mode"] = True
     try:
         last_val = None
