@@ -236,7 +236,7 @@ function updateDashboardDisplay(data) {
         refreshDashboardData(dashboardContainer);
         dashboardRefreshTimer = setInterval(() => {
             refreshDashboardData(dashboardContainer);
-        }, 5000);
+        }, 100);
     }
 
     // --- NAVIGATION SPA ---

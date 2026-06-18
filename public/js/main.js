@@ -48,5 +48,5 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Lancer toutes les 5 secondes
-    setInterval(updateDashboard, 5000);
+    setInterval(updateDashboard, 100);
 });
