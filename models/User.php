@@ -14,6 +14,10 @@ class User
 
     public function register($username, $email, $password)
     {
+        if (!$this->conn) {
+            return false;
+        }
+
         $query = "INSERT INTO " . $this->table_name . " (username, email, password) VALUES (:username, :email, :password)";
         $stmt = $this->conn->prepare($query);
 
@@ -32,6 +36,10 @@ class User
 
     public function login($username, $password)
     {
+        if (!$this->conn) {
+            return false;
+        }
+
         $query = "SELECT id, username, password FROM " . $this->table_name . " WHERE username = :username LIMIT 1";
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(":username", $username);

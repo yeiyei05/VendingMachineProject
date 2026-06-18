@@ -15,8 +15,7 @@ class DashboardController
     public function showDashboard()
     {
         if (!isset($_SESSION['user_id']) && !isset($_SESSION['username'])) {
-            header('Location: index.php?page=login');
-            exit();
+            \app_redirect('login');
         }
 
         $values = $this->getDashboardValues();

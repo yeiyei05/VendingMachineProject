@@ -3,7 +3,7 @@ namespace controllers;
 
 use models\Actionneur;
 
-require_once '../models/Actionneur.php';
+require_once __DIR__ . '/../models/Actionneur.php';
 
 class ActionneurController
 {
@@ -17,7 +17,6 @@ class ActionneurController
     public function changeStatus($type, $value)
     {
         $this->actionneurModel->updateStatus($type, $value);
-        header('Location: index.php?page=capteurs');
-        exit();
+        \app_redirect('capteurs');
     }
 }

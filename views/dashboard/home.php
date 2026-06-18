@@ -17,7 +17,7 @@ $stockMessage = $stockIsLow
     : 'Niveau de stock stable, détecté par le capteur HC-SR04.';
 ?>
 
-<section class="dashboard-stock-shell" id="dashboard-live-data" data-refresh-url="index.php?page=dashboard_data">
+<section class="dashboard-stock-shell" id="dashboard-live-data" data-refresh-url="<?= htmlspecialchars(app_url('dashboard_data')) ?>">
 
     <div class="dashboard-hero">
         <div>

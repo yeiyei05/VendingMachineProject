@@ -2,7 +2,7 @@
 namespace controllers;
 use models\Capteur;
 
-require_once '../models/Capteur.php';
+require_once __DIR__ . '/../models/Capteur.php';
 
 class CapteurController
 {

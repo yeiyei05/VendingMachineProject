@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vending Machine OS</title>
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="<?= htmlspecialchars(app_asset('css/style.css')) ?>">
 </head>
 <body>
 
@@ -14,10 +14,10 @@
             VENDING<span>OS</span>
         </div>
         <ul class="sidebar-menu">
-            <li><a href="index.php?page=home" class="menu-link <?php echo $page === 'home' ? 'active' : ''; ?>" data-page="home">🏠 Accueil</a></li>
-            <li><a href="index.php?page=dashboard" class="menu-link <?php echo $page === 'dashboard' ? 'active' : ''; ?>" data-page="dashboard">📊 Dashboard</a></li>
-            <li><a href="index.php?page=capteurs" class="menu-link <?php echo $page === 'capteurs' ? 'active' : ''; ?>" data-page="capteurs">🌡️ Capteurs & Actions</a></li>
-            <li><a href="index.php?page=logout" class="logout-btn">🚪 Déconnexion</a></li>
+            <li><a href="<?= htmlspecialchars(app_url('home')) ?>" class="menu-link <?php echo $page === 'home' ? 'active' : ''; ?>" data-page="home">🏠 Accueil</a></li>
+            <li><a href="<?= htmlspecialchars(app_url('dashboard')) ?>" class="menu-link <?php echo $page === 'dashboard' ? 'active' : ''; ?>" data-page="dashboard">📊 Dashboard</a></li>
+            <li><a href="<?= htmlspecialchars(app_url('capteurs')) ?>" class="menu-link <?php echo $page === 'capteurs' ? 'active' : ''; ?>" data-page="capteurs">🌡️ Capteurs & Actions</a></li>
+            <li><a href="<?= htmlspecialchars(app_url('logout')) ?>" class="logout-btn">🚪 Déconnexion</a></li>
         </ul>
     </aside>
 

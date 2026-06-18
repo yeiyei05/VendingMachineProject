@@ -32,7 +32,7 @@
         <div class="success"><?= htmlspecialchars($success) ?></div>
     <?php endif; ?>
 
-    <form action="index.php?page=register" method="POST">
+    <form action="<?= htmlspecialchars(app_url('register')) ?>" method="POST">
         <div class="form-group">
             <label for="username">Identifiant</label>
             <input type="text" id="username" name="username" placeholder="Choisissez un identifiant" required>
@@ -49,7 +49,7 @@
     </form>
 
     <div class="form-footer">
-        <p>Déjà un profil ? <a href="index.php?page=login">S'identifier ici</a></p>
+        <p>Déjà un profil ? <a href="<?= htmlspecialchars(app_url('login')) ?>">S'identifier ici</a></p>
     </div>
 </div>
 </body>

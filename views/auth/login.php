@@ -28,7 +28,7 @@
         <div class="alert"><?= htmlspecialchars($error) ?></div>
     <?php endif; ?>
 
-    <form action="index.php?page=login" method="POST">
+    <form action="<?= htmlspecialchars(app_url('login')) ?>" method="POST">
         <div class="form-group">
             <label for="username">Identifiant</label>
             <input type="text" id="username" name="username" placeholder="Votre identifiant" required>
@@ -41,7 +41,7 @@
     </form>
 
     <div class="form-footer">
-        <p>Nouveau sur la plateforme ? <a href="index.php?page=register">Créer un profil d'accès</a></p>
+        <p>Nouveau sur la plateforme ? <a href="<?= htmlspecialchars(app_url('register')) ?>">Créer un profil d'accès</a></p>
     </div>
 </div>
 </body>

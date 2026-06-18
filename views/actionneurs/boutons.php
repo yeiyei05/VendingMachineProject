@@ -5,7 +5,7 @@
     </p>
 
     <div style="margin-bottom: 15px;">
-        <a href="index.php?page=action&type=moteur&val=1" class="btn-cyber" style="display: block; text-decoration: none; text-align: center; box-shadow: 0 0 10px rgba(189, 0, 255, 0.3);">
+        <a href="<?= htmlspecialchars(app_url('action', ['type' => 'moteur', 'val' => '1'])) ?>" class="btn-cyber" style="display: block; text-decoration: none; text-align: center; box-shadow: 0 0 10px rgba(189, 0, 255, 0.3);">
              Activer le Rotor de Distribution
         </a>
     </div>
@@ -21,7 +21,7 @@
         Modifie la valeur numérique affichée sur l'écran LED du distributeur (idéal pour mettre à jour un prix ou afficher un code d'erreur).
     </p>
 
-    <form action="index.php?page=action&type=7segments" method="POST" style="display: flex; gap: 12px; align-items: center;">
+    <form action="<?= htmlspecialchars(app_url('action', ['type' => '7segments'])) ?>" method="POST" style="display: flex; gap: 12px; align-items: center;">
         <div style="flex-grow: 1;">
             <input type="number" name="val" class="form-control" placeholder="Ex: 150 (Yens)" min="0" max="999" required
                    style="font-family: monospace; font-size: 1.1rem; text-align: center; letter-spacing: 2px;">

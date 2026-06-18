@@ -14,6 +14,10 @@ class Actionneur
 
     public function updateStatus($type, $value)
     {
+        if (!$this->conn) {
+            return false;
+        }
+
         try {
             switch ($type) {
                 case 'moteur':

@@ -2,7 +2,7 @@
 namespace controllers;
 use models\User;
 
-require_once '../models/User.php';
+require_once __DIR__ . '/../models/User.php';
 
 class AuthController
 {
@@ -24,8 +24,7 @@ class AuthController
             if ($user) {
                 $_SESSION['user_id'] = $user['id'];
                 $_SESSION['username'] = $user['username'];
-                header('Location: index.php?page=dashboard');
-                exit();
+                \app_redirect('dashboard');
             } else {
                 $error = "Identifiants invalides ou clé de sécurité incorrecte.";
             }
@@ -54,7 +53,6 @@ class AuthController
     public function logout()
     {
         session_destroy();
-        header('Location: index.php?page=home');
-        exit();
+        \app_redirect('home');
     }
 }
