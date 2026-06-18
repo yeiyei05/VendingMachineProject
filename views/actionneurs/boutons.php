@@ -1,12 +1,12 @@
 <div class="cyber-card" style="border-left-color: var(--neon-purple); box-shadow: 0 5px 15px rgba(189, 0, 255, 0.05);">
-    <h3 style="color: var(--neon-purple); margin-top: 0; font-size: 1.2rem; letter-spacing: 1px;">📦 MOTORISATION DE COMMANDE</h3>
+    <h3 style="color: var(--neon-purple); margin-top: 0; font-size: 1.2rem; letter-spacing: 1px;"> MOTORISATION DE COMMANDE</h3>
     <p style="color: var(--text-muted); font-size: 0.9rem; line-height: 1.4; margin-bottom: 20px;">
         Déclenche manuellement la rotation de la spirale pour éjecter le produit sélectionné (boisson ou snack frais).
     </p>
 
     <div style="margin-bottom: 15px;">
         <a href="index.php?page=action&type=moteur&val=1" class="btn-cyber" style="display: block; text-decoration: none; text-align: center; box-shadow: 0 0 10px rgba(189, 0, 255, 0.3);">
-            🌀 Activer le Rotor de Distribution
+             Activer le Rotor de Distribution
         </a>
     </div>
 
@@ -16,7 +16,7 @@
 </div>
 
 <div class="cyber-card" style="border-left-color: var(--neon-purple); box-shadow: 0 5px 15px rgba(189, 0, 255, 0.05);">
-    <h3 style="color: var(--neon-purple); margin-top: 0; font-size: 1.2rem; letter-spacing: 1px;">🔢 FACADE NUMÉRIQUE (7-SEG)</h3>
+    <h3 style="color: var(--neon-purple); margin-top: 0; font-size: 1.2rem; letter-spacing: 1px;"> FACADE NUMÉRIQUE (7-SEG)</h3>
     <p style="color: var(--text-muted); font-size: 0.9rem; line-height: 1.4; margin-bottom: 20px;">
         Modifie la valeur numérique affichée sur l'écran LED du distributeur (idéal pour mettre à jour un prix ou afficher un code d'erreur).
     </p>
@@ -28,7 +28,7 @@
         </div>
         <div>
             <button type="submit" class="btn-cyber" style="padding: 12px 20px;">
-                ⚙️ Injecter
+                 Injecter
             </button>
         </div>
     </form>
