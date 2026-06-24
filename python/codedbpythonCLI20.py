@@ -37,7 +37,7 @@ from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
 from prompt_toolkit.styles import Style
 
 # ── Configuration Initiale ────────────────────────────────────────────────────
-PORT = "COM3"
+PORT = "COM4"
 BAUD = 115200
 TIMEOUT = 0.1
 
